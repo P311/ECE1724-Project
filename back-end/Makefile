@@ -6,3 +6,5 @@ install:
 	npm install
 run: install
 	npm run dev
+test:
+	npm run test
