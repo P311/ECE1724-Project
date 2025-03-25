@@ -4,6 +4,8 @@ const router = express.Router();
 const db = null;
 const middleware = require("../middleware");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+
 
 router.post(
   "/register",
@@ -23,6 +25,9 @@ router.post(
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: "Invalid input", message: "Email and password are required." });
+    }
 
     // Check if email and password are valid
     const user = await db.findUserByEmail(email);
