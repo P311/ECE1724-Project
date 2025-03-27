@@ -25,12 +25,10 @@ router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({
-          error: "Invalid input",
-          message: "Email and password are required.",
-        });
+      return res.status(400).json({
+        error: "Invalid input",
+        message: "Email and password are required.",
+      });
     }
 
     // Check if email and password are valid
