@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Car {
+  id             Int          @id @default(autoincrement())
+  make           String
+  model          String
+  year           Int
+  generation     String?
+  engine_size_cc Float?
+  fuel_type      String?
+  transmission   String?
+  drivetrain     String?
+  body_type      String?
+  num_doors      Int?
+  country        String?
+  mpg_city       Float?
+  mpg_highway    Float?
+  horsepower_hp  Int?
+  torque_ftlb    Int?
+  acceleration   Float?
+  car_image_path String?
+  comparisons    Comparison[] @relation("ComparisonToCar")
+  reviews        Review[]     @relation("ReviewToCar")
+}
+
+model User {
+  id            Int          @id @default(autoincrement())
+  username      String       @unique
+  email         String       @unique
+  password_hash String
+  num_likes     Int          @default(0)
+  comparisons   Comparison[] @relation("UserToComparison")
+  reviews       Review[]     @relation("UserToReview")
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  grade      Int // @check(grade >= 0 && grade <= 5)
+  content    String
+  car_id     Int
+  car        Car      @relation("ReviewToCar", fields: [car_id], references: [id])
+  user_id    Int
+  user       User     @relation("UserToReview", fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+  num_likes  Int      @default(0)
+  dislikes   Int      @default(0)
+}
+
+model Comparison {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  user       User     @relation("UserToComparison", fields: [user_id], references: [id])
+  cars       Car[]    @relation("ComparisonToCar")
+  created_at DateTime @default(now())
+}
