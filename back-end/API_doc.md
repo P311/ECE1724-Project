@@ -107,64 +107,17 @@ Unlike paper management system in our assignment, we need to allow the user to s
 
 Check user behavior in https://www.cars.com/research/compare/ : select make -> select model -> select year.
 
-Note: only make, model, year and id are returned to avoid overload. Send request with specific id to get more detail
+Note: Each time only 10 cars are returned.
 #### Response:
 - 200 OK
-Need discussion: instead of a list of car json objects, server will restructure everything in another way, so it's easier for frontend to query available options.
 ```
-[{
-  "make": <make>
-  "models": [
-    {
-      "model": <model>,
-      "years": [{
-        "year": <year>
-        "car_id": <id>
-      }]
-    }
-  ]
-}]
-```
-For example:
-```
-[{
-  "make": "BMW"
-  "models": [
-    {
-      "model": "i7",
-      "years": [{
-        "year": 2023,
-        "car_id": 4
-      }, {
-        "year": 2024,
-        "car_id": 5
-      }]
-    },
-    {
-      "model": "i5",
-      "years": [
-        {
-          "year": 2018,
-          "car_id": 7
-        }
-      ]
-    }
-  ]
-}, 
 {
-  "make": "Tesla",
-  "models": [
-    {
-      "model": "Model Y",
-      "years": [
-        {
-          "year": 2026,
-          "car_id": 10
-        }
-      ]
-    }
-  ]
-}]
+  cars: [{car1}, {car2}...]
+  offset: <offset>
+}
+
+```
+
 ```
 - 401 Unauthorized: user didn't login
 ```
@@ -217,7 +170,6 @@ Note: reviews and comparisons are not returned
 
   Send API call with comparsion id to get details.
 
-  Need discussion: add a name field for comparison?
 #### Query parameters:
 - user_id: required, valid and unique.
 
@@ -342,7 +294,7 @@ No response body
 #### Description:
 Get a page of reviews relates to the car
 
-Need discussion: each page includes 10 reviews by default and can't change
+Each page includes 10 reviews by default and can't change
 #### Query parameters:
 - car_id: car id related to reviews. Can be multiple
 - page: default 0

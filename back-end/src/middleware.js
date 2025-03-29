@@ -60,9 +60,152 @@ const authGuard = (req, res, next) => {
   }
 };
 
+const checkUserExists = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    // TODO: Implement database operation to check if user exists
+    const userExists = await db.checkUserExists(userId);
+    if (!userExists) {
+      return res.status(404).json({ error: "User does not exist" });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+const checkCarIdExist = async (req, res, next) => {
+  try {
+    const carId = req.params.id || req.body.car_id || req.query.car_id;
+    // TODO: Implement database operation to check if car ID exists
+    const carExists = await db.checkCarIdExist(carId);
+    if (!carExists) {
+      return res.status(404).json({ error: "Car does not exist" });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+const validateComparisonForm = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { cars } = req.body;
+
+    // Validate userId exists in the database
+    // TODO: Implement database operation to check if user exists
+    const userExists = await db.checkUserExists(userId);
+    if (!userExists) {
+      return res
+        .status(400)
+        .json({ error: "Invalid Input", message: "Invalid user id" });
+    }
+
+    // Validate cars is a non-empty array and each car ID exists in the database
+    if (!Array.isArray(cars) || cars.length === 0) {
+      return res.status(400).json({
+        error: "Invalid Input",
+        message: "Cars must be a non-empty list",
+      });
+    }
+
+    for (const carId of cars) {
+      // TODO: Implement database operation to check if car ID exists
+      const carExists = await db.checkCarIdExist(carId);
+      if (!carExists) {
+        return res.status(400).json({
+          error: "Invalid Input",
+          message: `Invalid car id: ${carId}`,
+        });
+      }
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+const checkComparisonExists = async (req, res, next) => {
+  try {
+    const comparisonId = req.params.id;
+    // TODO: Implement database operation to check if comparison exists
+    const comparisonExists = await db.checkComparisonExists(comparisonId);
+    if (!comparisonExists) {
+      return res.status(404).json({ error: "Comparison does not exist" });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+const checkReviewExists = async (req, res, next) => {
+  try {
+    const reviewId = req.params.id;
+    // TODO: Implement database operation to check if review exists
+    const reviewExists = await db.checkReviewExists(reviewId);
+    if (!reviewExists) {
+      return res.status(404).json({ error: "Review does not exist" });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+const validateReviewForm = async (req, res, next) => {
+  try {
+    const { car_id, grade, content } = req.body;
+
+    // Validate car_id exists in the database
+    // TODO: Implement database operation to check if car ID exists
+    if (!Number.isInteger(car_id)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid Input", message: "Invalid car id" });
+    }
+
+    // Validate grade is a positive integer from 1 to 5
+    if (!Number.isInteger(grade) || grade < 1 || grade > 5) {
+      return res
+        .status(400)
+        .json({
+          error: "Invalid Input",
+          message: "Grade must be an integer between 1 and 5",
+        });
+    }
+
+    // Validate content is a string within 4096 characters
+    if (
+      typeof content !== "string" ||
+      content.length === 0 ||
+      content.length > 4096
+    ) {
+      return res
+        .status(400)
+        .json({
+          error: "Invalid Input",
+          message: "Content must be a non-empty string within 4096 characters",
+        });
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   requestLogger,
   validateRegisterInfo,
   authGuard,
   errorHandler,
+  checkUserExists,
+  checkCarIdExist,
+  validateComparisonForm,
+  checkComparisonExists,
+  checkReviewExists,
+  validateReviewForm,
 };
