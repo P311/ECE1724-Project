@@ -5,11 +5,13 @@ import "./styles/globals.css";
 import Home from "./routes/home";
 import Login from "./routes/login";
 import Register from "./routes/register";
+import Profile from "./routes/profile";
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
   { path: "/login", element: <Login /> },
   { path: "/register", element: <Register /> },
+  { path: "/profile", element: <Profile /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

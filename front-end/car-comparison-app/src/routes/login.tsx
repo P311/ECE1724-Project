@@ -24,6 +24,7 @@ function Login() {
         const { token } = data;
         localStorage.setItem("jwt", token); // Store JWT in localStorage
         console.log(`JWT stored: ${token}`);
+        window.location.href = "/profile";
       })
       .catch((error) => {
         console.error("Error during login:", error);
