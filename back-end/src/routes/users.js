@@ -61,4 +61,29 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
+router.get("/", async (req, res, next) => {
+  try {
+    // const userId = req.user.id;
+
+    // Fetch user profile from the database
+    // const user = await db.findUserById(userId);
+
+    const user = {
+      username: "test",
+      email: "test@gmail.com",
+      numberOfLikes: 10,
+    };
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const profile = { ...user };
+    delete profile.password;
+    res.status(200).json(profile);
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

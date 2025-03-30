@@ -14,6 +14,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -23,37 +24,58 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-const items = [
-  {
-    title: "Home",
-    url: "/",
-    icon: Home,
-  },
-  {
-    title: "Create A Comparison",
-    url: "/create-comparison",
-    icon: Car,
-  },
-  {
-    title: "View Comparisons",
-    url: "/comparisons",
-    icon: FileText,
-  },
-  {
-    title: "Reviews",
-    url: "/reviews",
-    icon: MessageCircle,
-  },
-];
+function Profile (){
+  const [user, setUser] = useState({
+    username: "",
+    email: "",
+    numberOfLikes: 0,
+  });
+  
+  const items = [
+    {
+      title: "Home",
+      url: "/",
+      icon: Home,
+    },
+    {
+      title: "Create A Comparison",
+      url: "/create-comparison",
+      icon: Car,
+    },
+    {
+      title: "View Comparisons",
+      url: "/comparisons",
+      icon: FileText,
+    },
+    {
+      title: "Reviews",
+      url: "/reviews",
+      icon: MessageCircle,
+    },
+  ];
+  
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch("/api/users");
+        if (response.ok) {
+          const data = await response.json();
+          setUser({
+            username: data.username,
+            email: data.email,
+            numberOfLikes: data.numberOfLikes,
+          });
+        } else {
+          console.error("Failed to fetch user info");
+        }
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+      }
+    };
+  
+    fetchUserInfo();
+  }, []);
 
-// TODO: read current user info from backend
-const user = {
-  username: "John Doe",
-  email: "test@gmail.com",
-  numberOfLikes: 10,
-};
-
-const Profile = () => {
   return (
     <div className="bg-gradient-to-r from-cyan-500 to-blue-500">
       <SidebarProvider>
