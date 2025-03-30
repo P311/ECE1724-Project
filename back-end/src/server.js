@@ -2,6 +2,7 @@ const express = require("express");
 const routes = require("./routes");
 const middleware = require("./middleware");
 
+const dotenv = require("dotenv").config();
 const app = express();
 const PORT = 3000;
 

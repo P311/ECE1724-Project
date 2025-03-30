@@ -7,7 +7,17 @@ const requestLogger = (req, res, next) => {
   next();
 };
 
-const validateRegisterInfo = (form) => {
+const validateRegisterInfo = async (req, res, next) => {
+  const form = req.body;
+
+  // Check if email is an existing user
+  // if (form.email) {
+  //   const userExists = await db.checkUserByEmail(form.email);
+  //   if (userExists) {
+  //     errors.push("Email is already registered");
+  //   }
+  // }
+
   const errors = [];
   if (!form.username || typeof form.username !== "string") {
     errors.push("Invalid username");
@@ -32,8 +42,12 @@ const validateRegisterInfo = (form) => {
   ) {
     errors.push("Invalid email");
   }
-
-  return errors;
+  if (errors.length > 0) {
+    console.log(errors);
+    return res.status(400).json({ errors: errors });
+  } else {
+    next();
+  }
 };
 
 const errorHandler = (err, req, res, next) => {
@@ -169,12 +183,10 @@ const validateReviewForm = async (req, res, next) => {
 
     // Validate grade is a positive integer from 1 to 5
     if (!Number.isInteger(grade) || grade < 1 || grade > 5) {
-      return res
-        .status(400)
-        .json({
-          error: "Invalid Input",
-          message: "Grade must be an integer between 1 and 5",
-        });
+      return res.status(400).json({
+        error: "Invalid Input",
+        message: "Grade must be an integer between 1 and 5",
+      });
     }
 
     // Validate content is a string within 4096 characters
@@ -183,12 +195,10 @@ const validateReviewForm = async (req, res, next) => {
       content.length === 0 ||
       content.length > 4096
     ) {
-      return res
-        .status(400)
-        .json({
-          error: "Invalid Input",
-          message: "Content must be a non-empty string within 4096 characters",
-        });
+      return res.status(400).json({
+        error: "Invalid Input",
+        message: "Content must be a non-empty string within 4096 characters",
+      });
     }
 
     next();
