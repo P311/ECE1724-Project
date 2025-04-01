@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-// TODO: Implement database operations
-const db = null;
+const db = require("../database");
 const middleware = require("../middleware");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -19,7 +18,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.post("/login", async (req, res, next) => {
@@ -41,7 +40,7 @@ router.post("/login", async (req, res, next) => {
     // Check if email and password are valid
 
     // const user = await db.findUserByEmail(email);
-    // if (!user || !(await bcrypt.compare(password, user.password))) {
+    // if (!user || !(await bcrypt.compare(password, user.password_hash))) {
     //   return res.status(401).json({ error: "Invalid email or password" });
     // }
 
@@ -51,7 +50,7 @@ router.post("/login", async (req, res, next) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "1h",
-      },
+      }
     );
 
     const profile = { ...user };

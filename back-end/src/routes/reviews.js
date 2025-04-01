@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const middleware = require("../middleware");
-
-// TODO: Implement database operations
-const db = null;
+const db = require("../database");
 
 router.get(
   "/",
@@ -11,7 +9,7 @@ router.get(
   middleware.checkCarIdExist,
   async (req, res, next) => {
     try {
-      const { car_id, page = 0 } = req.query;
+      const { carId, page = 0 } = req.query;
       if (!Number.isInteger(Number(page)) || page < 0) {
         return res.status(400).json({
           error: "Invalid Input",
@@ -19,12 +17,12 @@ router.get(
         });
       }
       // TODO: Fetch reviews for the car with pagination
-      const reviews = await db.getReviewsByCarId(car_id, page);
+      const reviews = await db.getReviewsByCarId(carId, page);
       res.status(200).json(reviews);
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.post(
@@ -36,16 +34,16 @@ router.post(
   async (req, res, next) => {
     try {
       const userId = req.user.id;
-      const { car_id, grade, content } = req.body;
+      const { carId, grade, content } = req.body;
       // TODO: Validate input and create review
-      const review = await db.createReview(userId, car_id, grade, content);
+      const review = await db.createReview(userId, carId, grade, content);
       res
         .status(201)
         .json({ message: "Review created successfully", id: review.id });
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.put(
@@ -59,13 +57,13 @@ router.put(
       // TODO: Update review likes/dislikes
       const updatedReview = await db.updateReviewLikesDislikes(
         reviewId,
-        action,
+        action
       );
       res.status(201).json(updatedReview);
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.delete(
@@ -86,7 +84,7 @@ router.delete(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 module.exports = router;

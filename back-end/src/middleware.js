@@ -1,5 +1,6 @@
 const e = require("express");
 const jwt = require("jsonwebtoken");
+const db = require("./database");
 
 // Request logger middleware
 const requestLogger = (req, res, next) => {
