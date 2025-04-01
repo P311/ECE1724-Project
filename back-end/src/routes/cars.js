@@ -1,14 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const middleware = require("../middleware");
-
-// TODO: Implement database operations
-const db = null;
+const db = require("../database");
 
 router.get("/", middleware.authGuard, async (req, res, next) => {
   try {
     // TODO: Fetch cars with pagination
-    const cars = await db.getCars({ limit: 10 });
+    const cars = await db.getCars({ limit: 10, page: 0 });
     res.status(200).json({ cars, offset: 0 });
   } catch (error) {
     next(error);
@@ -28,7 +26,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 module.exports = router;

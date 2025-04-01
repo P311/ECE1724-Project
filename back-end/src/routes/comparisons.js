@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const middleware = require("../middleware");
-
-// TODO: Implement database operations
-const db = null;
+const db = require("../database");
 
 router.get(
   "/",
@@ -18,7 +16,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.get("/:id", middleware.authGuard, async (req, res, next) => {
@@ -52,7 +50,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.delete(
@@ -73,7 +71,7 @@ router.delete(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 module.exports = router;
