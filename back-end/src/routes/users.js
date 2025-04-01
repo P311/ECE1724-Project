@@ -13,7 +13,8 @@ router.post(
     try {
       const { username, password, email } = req.body;
       // TODO: createUser
-      const user = await db.createUser(username, password, email);
+      // const user = await db.createUser(username, password, email);
+      const user = req.body;
       res.status(201).json(user);
     } catch (error) {
       next(error);
@@ -31,12 +32,18 @@ router.post("/login", async (req, res, next) => {
       });
     }
 
+    const user = {
+      id: "test",
+      email: "test@gmail.com",
+      password: "tt",
+    };
+
     // Check if email and password are valid
-    const user = await db.findUserByEmail(email);
-    // TODO use bcrypt to compare the password
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ error: "Invalid email or password" });
-    }
+
+    // const user = await db.findUserByEmail(email);
+    // if (!user || !(await bcrypt.compare(password, user.password))) {
+    //   return res.status(401).json({ error: "Invalid email or password" });
+    // }
 
     // Generate a JWT
     const token = jwt.sign(

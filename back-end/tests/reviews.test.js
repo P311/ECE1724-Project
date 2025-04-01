@@ -1,0 +1,79 @@
+const request = require("supertest");
+const app = require("../src/server");
+const jwt = require("jsonwebtoken");
+
+describe("Reviews API", () => {
+  const validToken = jwt.sign(
+    { id: 1, email: "test@gmail.com" },
+    process.env.JWT_SECRET,
+  );
+
+  describe("GET /api/reviews", () => {
+    it("should return 401 if no token is provided", async () => {
+      const res = await request(app).get("/api/reviews");
+      expect(res.status).toBe(401);
+      expect(res.body).toEqual({ error: "Unauthorized" });
+    });
+
+    it("should return 200 with a list of reviews if token is valid", async () => {
+      const res = await request(app)
+        .get("/api/reviews?car_id=1")
+        .set("Authorization", validToken);
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+    });
+  });
+
+  describe("POST /api/reviews", () => {
+    it("should return 401 if no token is provided", async () => {
+      const res = await request(app)
+        .post("/api/reviews")
+        .send({ car_id: 1, grade: 5, content: "Great car!" });
+      expect(res.status).toBe(401);
+      expect(res.body).toEqual({ error: "Unauthorized" });
+    });
+
+    it("should return 201 if review is created successfully", async () => {
+      const res = await request(app)
+        .post("/api/reviews")
+        .set("Authorization", validToken)
+        .send({ car_id: 1, grade: 5, content: "Great car!" });
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty("message", "Review created successfully");
+    });
+  });
+
+  describe("PUT /api/reviews/:id", () => {
+    it("should return 401 if no token is provided", async () => {
+      const res = await request(app)
+        .put("/api/reviews/1")
+        .send({ action: "like" });
+      expect(res.status).toBe(401);
+      expect(res.body).toEqual({ error: "Unauthorized" });
+    });
+
+    it("should return 201 if review is updated successfully", async () => {
+      const res = await request(app)
+        .put("/api/reviews/1")
+        .set("Authorization", validToken)
+        .send({ action: "like" });
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty("id");
+    });
+  });
+
+  describe("DELETE /api/reviews/:id", () => {
+    it("should return 401 if no token is provided", async () => {
+      const res = await request(app).delete("/api/reviews/1");
+      expect(res.status).toBe(401);
+      expect(res.body).toEqual({ error: "Unauthorized" });
+    });
+
+    it("should return 204 if review is deleted successfully", async () => {
+      const res = await request(app)
+        .delete("/api/reviews/1")
+        .set("Authorization", validToken);
+      expect(res.status).toBe(204);
+    });
+  });
+});
