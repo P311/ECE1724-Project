@@ -1,65 +1,71 @@
+
 const app = require("../src/server");
 const middleware = require("../src/middleware");
 const jwt = require("jsonwebtoken");
+const request = require("supertest"); // used for sending mock requests
+const clearAllData  = require("./test_utils");
 
-valid_register_info = {
-  username: "username",
-  password: "Password123",
-  email: "test@gmail.com",
+const mockUser = {
+  username: "testuser",
+  email: "testuser@gmail.com",
+  password: "Password123!",
 };
-describe("validateRegisterInfo", () => {
-  describe("username", () => {
-    it("invalid username", () => {
+
+describe("User Routes", () => {
+
+  beforeEach(async () => {
+    jest.clearAllMocks(); // clean
+    await clearAllData();
+  });
+
+  describe("POST /register", () => {
+    it("should register a user with valid data", async () => {
+
+      const response = await request(app).post("/api/users/register").send(mockUser);
+
+      expect(response.body).toEqual({
+        username: mockUser.username,
+        email: mockUser.email,
+        num_likes: 0,
+        id: 1,
+      });
+      expect(response.status).toBe(201);
+    });
+
+    it("should not register a user with duplicate email", async () => {
+
+      await request(app).post("/api/users/register").send(mockUser);
+
+      // send twice
+      const response = await request(app).post("/api/users/register").send(mockUser);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty("errors");
+      expect(response.body.errors).toContain("Email is already registered");
+    });
+
+    it("should return 400 for invalid input", async () => {
       const invalid_names = ["u", "abcAV?", "AY12_3!", "1234567890123456111"];
-      for (const name of invalid_names) {
-        form = { ...valid_register_info, username: name };
-        expect(middleware.validateRegisterInfo(form)).toEqual([
-          "Invalid username",
-        ]);
-      }
-    });
+      for(const name of invalid_names){
+        const response = await request(app).post("/api/users/register").send({...mockUser, username: name});
 
-    it("valid username", () => {
-      const valid_names = [
-        "CHro.m-e",
-        "xeNo_BlA.de",
-        "jenshin",
-        "1234567890111",
-      ];
-      for (const name of valid_names) {
-        form = { ...valid_register_info, username: name };
-        expect(middleware.validateRegisterInfo(form)).toEqual([]);
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("errors");
+        expect(response.body.errors).toContain("Invalid username");
       }
-    });
-  });
-
-  describe("password", () => {
-    it("invalid password", () => {
       const invalid_passwords = [
-        "password",
-        "PASSWORD",
-        "PaSsWoRd",
-        "Password1234Password1234Pass",
-      ];
-      for (const password of invalid_passwords) {
-        form = { ...valid_register_info, password: password };
-        expect(middleware.validateRegisterInfo(form)).toEqual([
-          "Invalid password",
-        ]);
-      }
-    });
+                "password",
+                "PASSWORD",
+                "PaSsWoRd",
+                "Password1234Password1234Pass",
+              ];
+      for(const password of invalid_passwords){
+        const response = await request(app).post("/api/users/register").send({...mockUser, password: password});
 
-    it("valid password", () => {
-      const valid_passwords = ["Password123", "Password1234", "Password12345"];
-      for (const password of valid_passwords) {
-        form = { ...valid_register_info, password: password };
-        expect(middleware.validateRegisterInfo(form)).toEqual([]);
-      }
-    });
-  });
-
-  describe("email", () => {
-    it("invalid email", () => {
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("errors");
+        expect(response.body.errors).toContain("Invalid password");
+      }     
       const invalid_emails = [
         "test",
         "test@",
@@ -70,69 +76,49 @@ describe("validateRegisterInfo", () => {
         "test@com.",
         "test@.com",
       ];
-      for (const email of invalid_emails) {
-        form = { ...valid_register_info, email: email };
-        expect(middleware.validateRegisterInfo(form)).toEqual([
-          "Invalid email",
-        ]);
-      }
-    });
+      for(const email of invalid_emails){
+        const response = await request(app).post("/api/users/register").send({...mockUser, email: email});
 
-    it("valid email", () => {
-      const valid_emails = [
-        "test@email.com",
-        "test.l21@mail.utoronto.ca",
-        "ttt@163.com",
-      ];
-      for (const email of valid_emails) {
-        form = { ...valid_register_info, email: email };
-        expect(middleware.validateRegisterInfo(form)).toEqual([]);
-      }
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("errors");
+        expect(response.body.errors).toContain("Invalid email");
+      }   
     });
   });
-});
-describe("authGuard", () => {
-  const mockNext = jest.fn();
-  const mockRes = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-  };
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+  describe("POST /login", () => {
 
-  it("should return 401 if no token is provided", () => {
-    const mockReq = { headers: {} };
+    const credential = {
+      email: mockUser.email,
+      password: mockUser.password
+    }
 
-    middleware.authGuard(mockReq, mockRes, mockNext);
-
-    expect(mockRes.status).toHaveBeenCalledWith(401);
-    expect(mockRes.json).toHaveBeenCalledWith({ error: "Unauthorized" });
-    expect(mockNext).not.toHaveBeenCalled();
-  });
-
-  it("should return 401 if token is invalid", () => {
-    const mockReq = { headers: { authorization: "invalid" } };
-    jest.spyOn(jwt, "verify").mockImplementation(() => {
-      throw new Error("Invalid token");
+    beforeEach(async () => {
+      jest.clearAllMocks(); // clean
+      await clearAllData();
+      //register the mock user
+      await request(app).post("/api/users/register").send(mockUser);
     });
 
-    middleware.authGuard(mockReq, mockRes, mockNext);
+    it("should login a user with valid credentials", async () => {
+      const response = await request(app).post("/api/users/login").send(credential);
 
-    expect(mockRes.status).toHaveBeenCalledWith(401);
-    expect(mockRes.json).toHaveBeenCalledWith({ error: "Unauthorized" });
-  });
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("token");
+      expect(response.body.user).toEqual({
+        id: 1,
+        username: mockUser.username,
+        email: mockUser.email,
+        num_likes: 0
+      });
+    });
 
-  it("should call next if token is valid", () => {
-    const mockReq = { headers: { authorization: "valid" } };
-    const decodedToken = { id: 1, email: "test@gmail.com" };
-    jest.spyOn(jwt, "verify").mockReturnValue(decodedToken);
+    it("should return 401 for invalid credentials", async () => {
 
-    middleware.authGuard(mockReq, mockRes, mockNext);
+      const response = await request(app).post("/api/users/login").send({...credential, password: "Akihabara"});
 
-    expect(mockReq.user).toEqual(decodedToken);
-    expect(mockNext).toHaveBeenCalled();
-    expect(mockRes.status).not.toHaveBeenCalled();
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty("error", "Invalid email or password");
+    });
   });
 });

@@ -10,16 +10,16 @@ const requestLogger = (req, res, next) => {
 
 const validateRegisterInfo = async (req, res, next) => {
   const form = req.body;
-
-  // Check if email is an existing user
-  // if (form.email) {
-  //   const userExists = await db.checkUserByEmail(form.email);
-  //   if (userExists) {
-  //     errors.push("Email is already registered");
-  //   }
-  // }
-
+  
   const errors = [];
+  // Check if email is an existing user
+  if (form.email) {
+    const userExists = await db.findUserByEmail(form.email);
+    if (userExists) {
+      errors.push("Email is already registered");
+    }
+  }
+
   if (!form.username || typeof form.username !== "string") {
     errors.push("Invalid username");
   } else if (form.username.length < 3 || form.username.length > 15) {

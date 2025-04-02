@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const bcrypt = require("bcrypt");
 
 const dbOperations = {
   // db operations on Car
@@ -278,7 +279,8 @@ const dbOperations = {
   },
   createUser: async (username, password, email) => {
     try {
-      const passwordHash = bcrypy.hashpw(password, bcrypt.gensalt());
+      // ref: https://www.npmjs.com/package/bcrypt
+      const passwordHash = bcrypt.hashSync(password, 10);
       const user = await prisma.user.create({
         data: {
           username,
@@ -286,12 +288,12 @@ const dbOperations = {
           email,
         },
       });
-
       return user;
     } catch (error) {
       throw error;
     }
   },
+
   findUserByEmail: async (email) => {
     try {
       const user = await prisma.user.findUnique({
