@@ -166,7 +166,7 @@ const checkReviewExists = async (req, res, next) => {
     const reviewId = req.params.id;
     if (!Number.isInteger(Number(reviewId)) || Number(reviewId) <= 0) {
       return res.status(400).json({
-        error: "Invalid review ID. It must be a non-negative integer.",
+        error: "Invalid review ID. It must be a positive integer.",
       });
     }
     // TODO: Implement database operation to check if review exists
