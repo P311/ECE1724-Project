@@ -293,6 +293,7 @@ const dbOperations = {
       throw error;
     }
   },
+
   findUserByEmail: async (email) => {
     try {
       const user = await prisma.user.findUnique({
