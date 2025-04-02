@@ -10,7 +10,7 @@ const requestLogger = (req, res, next) => {
 
 const validateRegisterInfo = async (req, res, next) => {
   const form = req.body;
-  
+
   const errors = [];
   // Check if email is an existing user
   if (form.email) {
@@ -65,7 +65,6 @@ const authGuard = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
@@ -93,7 +92,13 @@ const checkCarIdExist = async (req, res, next) => {
   try {
     const carId = req.params.id || req.body.car_id || req.query.car_id;
     // TODO: Implement database operation to check if car ID exists
-    const carExists = await db.checkCarIdExist(carId);
+    if (!Number.isInteger(Number(carId)) || Number(carId) <= 0) {
+      return res
+        .status(400)
+        .json({ error: "Invalid car ID. It must be a positive integer." });
+    }
+
+    const carExists = await db.checkCarIdExist(Number(carId));
     if (!carExists) {
       return res.status(404).json({ error: "Car does not exist" });
     }

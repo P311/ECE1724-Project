@@ -41,7 +41,7 @@ const dbOperations = {
     try {
       const car = await prisma.car.findUnique({
         where: {
-          id,
+          id: carId,
         },
       });
       if (!car) {

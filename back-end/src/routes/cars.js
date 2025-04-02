@@ -6,7 +6,7 @@ const db = require("../database");
 router.get("/", middleware.authGuard, async (req, res, next) => {
   try {
     // TODO: Fetch cars with pagination
-    const cars = await db.getCars({ limit: 10, page: 0 });
+    const cars = await db.getCars({ limit: 10, page: 1 });
     res.status(200).json({ cars, offset: 0 });
   } catch (error) {
     next(error);
@@ -20,13 +20,13 @@ router.get(
   async (req, res, next) => {
     try {
       const carId = req.params.id;
-      // TODO: Fetch car details by ID
-      const car = await db.getCarById(carId);
+
+      const car = await db.getCarById(Number(carId));
       res.status(200).json(car);
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 module.exports = router;
