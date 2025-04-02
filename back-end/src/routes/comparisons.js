@@ -16,7 +16,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.get("/:id", middleware.authGuard, async (req, res, next) => {
@@ -50,7 +50,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.delete(
@@ -71,7 +71,7 @@ router.delete(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 module.exports = router;

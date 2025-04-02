@@ -22,7 +22,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.post(
@@ -43,7 +43,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.put(
@@ -57,13 +57,13 @@ router.put(
       // TODO: Update review likes/dislikes
       const updatedReview = await db.updateReviewLikesDislikes(
         reviewId,
-        action
+        action,
       );
       res.status(201).json(updatedReview);
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.delete(
@@ -84,7 +84,7 @@ router.delete(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 module.exports = router;

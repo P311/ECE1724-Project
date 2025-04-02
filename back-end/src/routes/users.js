@@ -19,7 +19,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.post("/login", async (req, res, next) => {
@@ -45,7 +45,7 @@ router.post("/login", async (req, res, next) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "1h",
-      }
+      },
     );
 
     const profile = { ...user };
