@@ -164,8 +164,13 @@ const checkComparisonExists = async (req, res, next) => {
 const checkReviewExists = async (req, res, next) => {
   try {
     const reviewId = req.params.id;
+    if (!Number.isInteger(Number(reviewId)) || Number(reviewId) <= 0) {
+      return res.status(400).json({
+        error: "Invalid review ID. It must be a non-negative integer.",
+      });
+    }
     // TODO: Implement database operation to check if review exists
-    const reviewExists = await db.checkReviewExists(reviewId);
+    const reviewExists = await db.checkReviewExists(Number(reviewId));
     if (!reviewExists) {
       return res.status(404).json({ error: "Review does not exist" });
     }

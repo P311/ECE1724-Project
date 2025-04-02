@@ -5,9 +5,29 @@ const db = require("../database");
 
 router.get("/", middleware.authGuard, async (req, res, next) => {
   try {
-    // TODO: Fetch cars with pagination
-    const cars = await db.getCars({ limit: 10, page: 1 });
-    res.status(200).json({ cars, offset: 0 });
+    const limit = parseInt(req.query.limit, 10);
+    const page = parseInt(req.query.page, 10);
+
+    if (
+      (limit !== undefined && limit <= 0) ||
+      (page !== undefined && page <= 0)
+    ) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "Query parameters 'limit' and 'page' must be positive integers.",
+        });
+    }
+
+    // Page must be at least 1
+    const cars = await db.getCars({
+      limit: limit ? limit : 10,
+      page: page ? page : 1,
+    });
+    res
+      .status(200)
+      .json({ cars, page: page ? page : 1, limit: limit ? limit : 10 });
   } catch (error) {
     next(error);
   }

@@ -9,15 +9,14 @@ router.get(
   middleware.checkCarIdExist,
   async (req, res, next) => {
     try {
-      const { carId, page = 0 } = req.query;
-      if (!Number.isInteger(Number(page)) || page < 0) {
+      const { car_id, page = 1 } = req.query;
+      if (!Number.isInteger(Number(page)) || page <= 0) {
         return res.status(400).json({
           error: "Invalid Input",
           message: "Page must be a positive integer",
         });
       }
-      // TODO: Fetch reviews for the car with pagination
-      const reviews = await db.getReviewsByCarId(carId, page);
+      const reviews = await db.getReviewsByCarId(Number(car_id), page);
       res.status(200).json(reviews);
     } catch (error) {
       next(error);
@@ -33,10 +32,10 @@ router.post(
   middleware.validateReviewForm,
   async (req, res, next) => {
     try {
-      const userId = req.user.id;
-      const { carId, grade, content } = req.body;
+      const user_id = req.user.id;
+      const { car_id, grade, content } = req.body;
       // TODO: Validate input and create review
-      const review = await db.createReview(userId, carId, grade, content);
+      const review = await db.createReview(user_id, car_id, grade, content);
       res
         .status(201)
         .json({ message: "Review created successfully", id: review.id });
@@ -54,9 +53,9 @@ router.put(
     try {
       const reviewId = req.params.id;
       const { action } = req.body;
-      // TODO: Update review likes/dislikes
+      // id must exist after validateReview passed
       const updatedReview = await db.updateReviewLikesDislikes(
-        reviewId,
+        Number(reviewId),
         action,
       );
       res.status(201).json(updatedReview);
@@ -73,8 +72,8 @@ router.delete(
   async (req, res, next) => {
     try {
       const reviewId = req.params.id;
-      // TODO: Delete review by ID
-      const deleted = await db.deleteReview(reviewId);
+      // id must exist after validateReview passed
+      const deleted = await db.deleteReview(Number(reviewId));
       if (!deleted) {
         return res
           .status(400)

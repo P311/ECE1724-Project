@@ -1,7 +1,7 @@
 const request = require("supertest");
 const app = require("../src/server");
 const jwt = require("jsonwebtoken");
-const clearAllData  = require("./test_utils");
+const utils  = require("./test_utils");
 const { PrismaClient } = require("@prisma/client");
 
 
@@ -13,49 +13,11 @@ describe("Cars API", () => {
     process.env.JWT_SECRET,
   );
 
-  const mockCar1 = {
-    make: "Toyota",
-    model: "Corolla",
-    year: 2020,
-    generation: "12th",
-    engine_size_cc: 1798,
-    fuel_type: "Petrol",
-    transmission: "CVT",
-    drivetrain: "FWD",
-    body_type: "Sedan",
-    num_doors: 4,
-    country: "Japan",
-    mpg_city: 30.0,
-    mpg_highway: 38.0,
-    horsepower_hp: 139,
-    torque_ftlb: 126,
-    acceleration: 8.2,
-    car_image_path: "/images/toyota_corolla_2020.jpg",
-  };
-  const mockCar2 = {
-      make: "Honda",
-      model: "Civic",
-      year: 2021,
-      generation: "11th",
-      engine_size_cc: 1498,
-      fuel_type: "Petrol",
-      transmission: "Automatic",
-      drivetrain: "FWD",
-      body_type: "Sedan",
-      num_doors: 4,
-      country: "Japan",
-      mpg_city: 32.0,
-      mpg_highway: 42.0,
-      horsepower_hp: 158,
-      torque_ftlb: 138,
-      acceleration: 7.8,
-      car_image_path: "/images/honda_civic_2021.jpg",
-  };
+  const mockCar1 = utils.mockCar1;
+
   beforeEach(async () => {
-    await clearAllData();
-    await prisma.car.createMany({
-      data: [mockCar1, mockCar2],
-    });
+    await utils.clearAllData();
+    await utils.insertMockCars();
   });
 
   describe("GET /api/cars", () => {
@@ -71,7 +33,28 @@ describe("Cars API", () => {
         .set("Authorization", validToken);
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty("cars");
-      expect(res.body).toHaveProperty("offset");
+      expect(res.body).toHaveProperty("page");
+      expect(res.body).toHaveProperty("limit");
+    });
+
+    it("should return only 1 car if limit is 1", async () => {
+      const res = await request(app)
+        .get("/api/cars?limit=1")
+        .set("Authorization", validToken);
+      expect(res.status).toBe(200);
+      expect(res.body.cars.length).toBe(1);
+      expect(res.body.cars[0]).toEqual({id:1, ...utils.mockCar1});
+    });
+
+    it("should return the second car if page is 2 with limit 1", async () => {
+      await utils.clearAllData();
+      await utils.insertMockCars();
+      const res = await request(app)
+        .get("/api/cars?limit=1&page=2")
+        .set("Authorization", validToken);
+      expect(res.status).toBe(200);
+      expect(res.body.cars.length).toBe(1);
+      expect(res.body.cars[0]).toEqual({id:2, ...utils.mockCar2});
     });
   });
 

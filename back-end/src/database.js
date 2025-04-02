@@ -204,9 +204,7 @@ const dbOperations = {
           grade,
           content,
           car_id: carId,
-          car,
           user_id: userId,
-          user,
         },
         include: {
           car: true,
@@ -219,13 +217,12 @@ const dbOperations = {
       throw error;
     }
   },
-  getReviewsByCarId: async (carId, page) => {
+  getReviewsByCarId: async (car_id, page) => {
     try {
       const limit = 10; // Default 10 Reviews per fetch
-
       const reviews = await prisma.review.findMany({
         where: {
-          car_id: carId,
+          car_id: car_id,
         },
         take: limit,
         skip: (page - 1) * limit,
@@ -243,9 +240,11 @@ const dbOperations = {
         where: {
           id: reviewId,
         },
-        // data: {
-
-        // }
+        data: {
+          // conditional object properties
+          ...(action === "like" && { num_likes: { increment: 1 } }),
+          ...(action === "dislike" && { dislikes: { increment: 1 } }),
+        },
       });
       return updatedReview;
     } catch (error) {
