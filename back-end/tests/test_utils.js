@@ -120,4 +120,31 @@ async function registerMockUser() {
   await request(app).post("/api/users/register").send(mockUser2);
 }
 
-module.exports = {clearAllData, insertMockCars, insertMockReviews, registerMockUser, mockReview1, mockReview2, mockReview3, mockUser1, mockUser2, mockCar1, mockCar2};
+async function insertMockComparisons() {
+  await registerMockUser();
+  await insertMockCars();
+  await prisma.comparison.create({
+    data: {
+      user_id: 1,
+      cars: {
+        connect: [{id: 1}, {id: 2}]
+      }
+    }
+  });
+  await prisma.comparison.create({
+    data: {
+      user_id: 2,
+      cars: {
+        connect: [{id: 1}, {id: 2}]
+      }
+    }
+  });
+}
+
+
+module.exports = {
+  clearAllData, 
+  insertMockCars, insertMockReviews, registerMockUser, insertMockComparisons,
+  mockReview1, mockReview2, mockReview3, 
+  mockUser1, mockUser2, 
+  mockCar1, mockCar2};

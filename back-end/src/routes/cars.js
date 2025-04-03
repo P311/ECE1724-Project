@@ -12,12 +12,9 @@ router.get("/", middleware.authGuard, async (req, res, next) => {
       (limit !== undefined && limit <= 0) ||
       (page !== undefined && page <= 0)
     ) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "Query parameters 'limit' and 'page' must be positive integers.",
-        });
+      return res.status(400).json({
+        error: "Query parameters 'limit' and 'page' must be positive integers.",
+      });
     }
 
     // Page must be at least 1

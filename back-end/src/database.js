@@ -96,8 +96,9 @@ const dbOperations = {
       const comparison = await prisma.comparison.create({
         data: {
           user_id: userId,
-          user,
-          cars: carObjects,
+          cars: {
+            connect: cars.map((car) => ({ id: car })),
+          },
         },
         include: {
           cars: {
@@ -117,8 +118,10 @@ const dbOperations = {
         where: {
           user_id: userId,
         },
-        cars: {
-          orderBy: { id: "asc" },
+        include: {
+          cars: {
+            orderBy: { id: "asc" },
+          },
         },
       });
 

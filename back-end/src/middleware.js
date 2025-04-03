@@ -150,8 +150,14 @@ const validateComparisonForm = async (req, res, next) => {
 const checkComparisonExists = async (req, res, next) => {
   try {
     const comparisonId = req.params.id;
-    // TODO: Implement database operation to check if comparison exists
-    const comparisonExists = await db.checkComparisonExists(comparisonId);
+    if (!Number.isInteger(Number(comparisonId)) || Number(comparisonId) <= 0) {
+      return res.status(400).json({
+        error: "Invalid comparison ID. It must be a positive integer.",
+      });
+    }
+    const comparisonExists = await db.checkComparisonExists(
+      Number(comparisonId),
+    );
     if (!comparisonExists) {
       return res.status(404).json({ error: "Comparison does not exist" });
     }

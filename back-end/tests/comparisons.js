@@ -1,12 +1,19 @@
 const request = require("supertest");
 const app = require("../src/server");
 const jwt = require("jsonwebtoken");
+const utils  = require("./test_utils");
 
 describe("Comparisons API", () => {
   const validToken = jwt.sign(
     { id: 1, email: "test@gmail.com" },
     process.env.JWT_SECRET,
   );
+
+  beforeEach(async () => {
+    // Clear any existing data and insert mock data
+    await utils.clearAllData();
+    await utils.insertMockComparisons();
+  });
 
   describe("GET /api/comparisons", () => {
     it("should return 401 if no token is provided", async () => {
@@ -20,7 +27,9 @@ describe("Comparisons API", () => {
         .get("/api/comparisons")
         .set("Authorization", validToken);
       expect(res.status).toBe(200);
-      expect(Array.isArray(res.body)).toBe(true);
+      // should get current user's comparisons only
+      expect(res.body.length).toEqual(1);
+      expect(res.body[0].id).toEqual(1);
     });
   });
 

@@ -2,4 +2,4 @@
 require('./cars.js');
 require('./users.js');
 require('./reviews.js');
-// require('./comparisons.js');
+require('./comparisons.js');
