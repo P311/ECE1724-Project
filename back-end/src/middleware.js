@@ -122,17 +122,8 @@ const checkCarIdExist = async (req, res, next) => {
 
 const validateComparisonForm = async (req, res, next) => {
   try {
-    const userId = req.user.id;
     const { cars } = req.body;
 
-    // Validate userId exists in the database
-    // TODO: Implement database operation to check if user exists
-    const userExists = await db.checkUserExists(userId);
-    if (!userExists) {
-      return res
-        .status(400)
-        .json({ error: "Invalid Input", message: "Invalid user id" });
-    }
 
     // Validate cars is a non-empty array and each car ID exists in the database
     if (!Array.isArray(cars) || cars.length === 0) {
