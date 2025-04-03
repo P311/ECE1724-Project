@@ -27,6 +27,11 @@ router.get(
     try {
       const comparisonId = req.params.id;
       const comparison = await db.getComparisonById(Number(comparisonId));
+      if (comparison.user_id != req.user.id) {
+        return res
+          .status(403)
+          .json({ error: "You do not own this comparison" });
+      }
       res.status(200).json(comparison);
     } catch (error) {
       next(error);
