@@ -11,7 +11,6 @@ router.post(
   async (req, res, next) => {
     try {
       const { username, password, email } = req.body;
-      // TODO: createUser
       const user = await db.createUser(username, password, email);
 
       delete user.password_hash; // Remove password hash from the response
@@ -56,19 +55,19 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
-router.get("/", async (req, res, next) => {
+router.get("/", middleware.authGuard, async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const email = req.user.email;
 
     // Fetch user profile from the database
-    const user = await db.findUserById(userId);
+    const user = await db.findUserByEmail(email);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
     const profile = { ...user };
-    delete profile.password;
+    delete profile.password_hash;
     res.status(200).json(profile);
   } catch (error) {
     next(error);

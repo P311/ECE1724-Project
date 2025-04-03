@@ -16,7 +16,23 @@ const validateRegisterInfo = async (req, res, next) => {
   if (form.email) {
     const userExists = await db.findUserByEmail(form.email);
     if (userExists) {
-      errors.push("Email is already registered");
+      return res
+        .status(409)
+        .json({
+          error: "Invalid Input",
+          message: "Email is already registered",
+        });
+    }
+  }
+  if (form.username) {
+    const userExists = await db.findUserByUsername(form.username);
+    if (userExists) {
+      return res
+        .status(409)
+        .json({
+          error: "Invalid Input",
+          message: "Username is already registered",
+        });
     }
   }
 

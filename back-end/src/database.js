@@ -308,6 +308,19 @@ const dbOperations = {
       throw error;
     }
   },
+
+  findUserByUsername: async (username) => {
+    try {
+      const user = await prisma.user.findUnique({
+        where: {
+          username,
+        },
+      });
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 module.exports = {
