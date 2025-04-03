@@ -7,9 +7,9 @@ Register a new user
 
 #### Request body:
 
-- username: non-empty string, 3-15 characters length, allows a-z, A-Z, 0-9, ".", "-" and "_". E.g, "vAlid-User_Name" is valid, "User?Na/Me" and 'a' are invalid. Duplicate username is allowed
+- username: non-empty string, 3-15 characters length, allows a-z, A-Z, 0-9, ".", "-" and "_". E.g, "vAlid-User_Name" is valid, "User?Na/Me" and 'a' are invalid. Duplicate username is not allowed
 
-- email: check [this](https://stackoverflow.com/questions/46155/how-can-i-validate-an-email-address-in-javascript)
+- email: use a simpler regex to validate: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
 
 - password: 8-20 characters length, includes 1+ uppercase, 1+ lowercase, 1+ number. All symbols are allowed.
 
@@ -25,34 +25,45 @@ Example request body:
 - 201 Created
 ```
 {
-  "message": "User registered successfully",
-  "id": number
+    "id": 5,
+    "username": "P3111",
+    "email": "test@gmail3.com",
+    "num_likes": 0
 }
 ```
 - 400 Bad request: usually invalid form data
 ```
 {
-  "Error": "Invalid Input",
-  "message": "Invalid user email"
+  "errors": [
+    "Invalid email"
+  ]
 }
 ```
 ```
 {
-  "Error": "Invalid Input",
-  "message": "Invalid username"
+  "errors": [
+    "Invalid password"
+  ]
 }
 ```
 ```
 {
-  "Error": "Invalid Input",
-  "message": "Invalid password"
+  "errors": [
+    "Invalid username"
+  ]
 }
 ```
 - 409 Conflict
 ```
 {
   "Error": "Invalid Input",
-  "message": "User email already in use"
+  "message": "Email is already registered"
+}
+```
+```
+{
+  "Error": "Invalid Input",
+  "message": "Username is already registered"
 }
 ```
 ### POST /api/users/login
@@ -72,14 +83,12 @@ To logout, just clean the token in the frontend.
 - 200 OK
 ```
 {
-  "message": "Login successful",
   "token": string,
   "user": {
     "id": 1,
     "username": "john_doe",
     "email": "john.doe@example.com",
     "num_likes": 10,
-    "created_at": "2023-10-01T12:00:00Z"
   }
 }
 ```
@@ -93,8 +102,28 @@ To logout, just clean the token in the frontend.
 - 401 Unauthorized:
 ```
 {
-  "error": "Unauthorized",
-  "details": "Invalid email or password."
+    "error": "Invalid email or password"
+}
+```
+### GET /api/users
+#### Description:
+Get the profile of the current user. User id is fetched from JWT in the header, so no additional parameters/body are required.
+
+#### Response
+- 200 OK
+```
+{
+    "id": 3,
+    "username": "P311121",
+    "email": "test@gmail2.com",
+    "password_hash": "$2b$10$GVPT8Vf2wlS1.UX8qD.yw.pFA4QIbER2kRiTxqZ/jLMiYYQE.b8yu",
+    "num_likes": 0
+}
+```
+- 401 UNauthorized
+```
+{
+  "error": "Unauthorized"
 }
 ```
 
@@ -113,16 +142,16 @@ Note: Each time only 10 cars are returned.
 ```
 {
   cars: [{car1}, {car2}...]
-  offset: <offset>
+  page: 1,
+  limit: 10
 }
 
 ```
 
-```
 - 401 Unauthorized: user didn't login
 ```
 {
-  "error": "Unauthorized, no token or invalid token"
+  "error": "Unauthorized"
 }
 ```
 
@@ -159,41 +188,36 @@ Note: reviews and comparisons are not returned
 - 401 Unauthorized: user didn't login
 ```
 {
-  "error": "Unauthorized, no token or invalid token"
+  "error": "Unauthorized"
 }
 ```
 
 ## Comparisons
 ### GET /api/comparisons
 #### Description:
-  Return a list of comparisons relates to the user
+  Return a list of comparisons relates to the current user.
 
   Send API call with comparsion id to get details.
 
-#### Query parameters:
-- user_id: required, valid and unique.
+  Usually we don't have too much comparisons so paging is not implemented.
 
-/api/comparisons?user_id=1&user_id=2 is not acceptable. Will check token for proper user id. User 1 can't access User 2's saved comparisons.
 #### Response body:
 - 200 OK:
 ```
 [{
   "id": int,
-  "created_at": timestamp
+  "user_id": int,
+  "created_at": timestamp,
+  "cars": [{car1}, {car2}...],
 }]
 ```
 - 401 Unauthorized: 
 ```
 {
-  "error": "Unauthorized, no token or invalid token"
+  "error": "Unauthorized"
 }
 ```
-- 404 Not found: 
-```
-{
-  "error": "User does not exist"
-}
-```
+
 ### GET /api/comparisons/:id
 #### Description
 Get a comparison's details. All cars info in the comparison will be included.
@@ -225,7 +249,7 @@ Get a comparison's details. All cars info in the comparison will be included.
 - 401 Unauthorized: 
 ```
 {
-  "error": "Unauthorized, no token or invalid token"
+  "error": "Unauthorized"
 }
 ```
 - 404 Not found: 
@@ -234,11 +258,16 @@ Get a comparison's details. All cars info in the comparison will be included.
   "error": "Comparison does not exist"
 }
 ```
+- 403 Forbidden: If the user_id is not the current user.
+```
+{
+  "error": "You do not own this comparison"
+}
+```
 ### POST /api/comparisons
 #### Request body:
 Create a comparison. This is called only when user save/share a comparison.
 {
-  "user_id": int,
   "cars": [list of car ids only, no need to include details]
 }
 #### Response body:
@@ -253,19 +282,13 @@ Create a comparison. This is called only when user save/share a comparison.
 ```
 {
   "error": "Invalid Input",
-  "message": "Invalid user id"
-}
-```
-```
-{
-  "error": "Invalid Input",
-  "message": "Invalid car id"
+  "message": "Invalid car id: <id>"
 }
 ```
 - 401 Unauthorized: 
 ```
 {
-  "error": "Unauthorized, no token or invalid token"
+  "error": "Unauthorized"
 }
 ```
 ### DELETE /api/comparisons/:id
@@ -286,11 +309,11 @@ No response body
 - 401 Unauthorized: 
 ```
 {
-  "error": "Unauthorized, no token or invalid token"
+  "error": "Unauthorized"
 }
 ```
 ## Reviews
-### GET /api/reviews
+### GET /api/reviews/by-car
 #### Description:
 Get a page of reviews relates to the car
 
@@ -314,6 +337,43 @@ List of reviews with full details.
     num_dislikes: int
   }
 ]
+```
+- 401 Unauthorized
+```
+{
+  "error": "Unauthorized"
+}
+```
+
+## Reviews
+### GET /api/reviews/by-user
+#### Description:
+Get a page of reviews relates to the current user
+#### Query parameters:
+- page: default 0
+#### Response body:
+List of reviews with full details.
+- 200 OK
+```
+[
+  {
+    id: int,
+    grade: int,
+    content: string,
+    car_id: int,
+    user_id: int,
+    created_at: timestamp
+    num_likes: int
+    num_dislikes: int
+  }
+]
+```
+#### Response
+- 401 Unauthorized
+```
+{
+  "error": "Unauthorized"
+}
 ```
 
 ### POST /api/reviews
@@ -345,7 +405,7 @@ Create a new review about a car. Server is supposed to know which user creates i
 - 401 Unauthorized: 
 ```
 {
-  "error": "Unauthorized, no token or invalid token"
+  "error": "Unauthorized"
 }
 ```
 ### PUT /api/reviews/:id
@@ -361,7 +421,7 @@ Likes/Dislikes a review
 #### Response:
 - 201 Updated
 ```
-{         # updated review
+{    # updated review
     id: int,
     grade: int,
     content: string,
@@ -369,7 +429,7 @@ Likes/Dislikes a review
     user_id: int,
     created_at: timestamp
     num_likes: int
-    num_dislikes: int
+    dislikes: int
 }
 
 ```
@@ -383,9 +443,16 @@ Likes/Dislikes a review
 - 401 Unauthorized: 
 ```
 {
-  "error": "Unauthorized, no token or invalid token"
+  "error": "Unauthorized"
 }
 ```
+- 404 Not found:
+```
+{
+  "error": "Review does not exist"
+}
+```
+
 ### DELETE /api/reviews/:id
 #### Description:
 Deletes a review
@@ -404,6 +471,6 @@ No response body
 - 401 Unauthorized: 
 ```
 {
-  "error": "Unauthorized, no token or invalid token"
+  "error": "Unauthorized"
 }
 ```
