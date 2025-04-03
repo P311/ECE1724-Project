@@ -4,7 +4,7 @@ const middleware = require("../middleware");
 const db = require("../database");
 
 router.get(
-  "/",
+  "/by-car",
   middleware.authGuard,
   middleware.checkCarIdExist,
   async (req, res, next) => {
@@ -23,6 +23,23 @@ router.get(
     }
   },
 );
+
+router.get("/by-user", middleware.authGuard, async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { page = 1 } = req.query;
+    if (!Number.isInteger(Number(page)) || page <= 0) {
+      return res.status(400).json({
+        error: "Invalid Input",
+        message: "Page must be a positive integer",
+      });
+    }
+    const reviews = await db.getReviewsByUserId(userId);
+    res.status(200).json(reviews);
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.post(
   "/",
