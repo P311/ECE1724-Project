@@ -3,7 +3,7 @@ const app = require("../src/server");
 const middleware = require("../src/middleware");
 const jwt = require("jsonwebtoken");
 const request = require("supertest"); // used for sending mock requests
-const clearAllData  = require("./test_utils");
+const utils  = require("./test_utils");
 
 const mockUser = {
   username: "testuser",
@@ -14,8 +14,7 @@ const mockUser = {
 describe("User Routes", () => {
 
   beforeEach(async () => {
-    jest.clearAllMocks(); // clean
-    await clearAllData();
+    await utils.clearAllData();
   });
 
   describe("POST /register", () => {
@@ -95,7 +94,7 @@ describe("User Routes", () => {
 
     beforeEach(async () => {
       jest.clearAllMocks(); // clean
-      await clearAllData();
+      await utils.clearAllData();
       //register the mock user
       await request(app).post("/api/users/register").send(mockUser);
     });
@@ -120,5 +119,13 @@ describe("User Routes", () => {
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty("error", "Invalid email or password");
     });
+
+    it("should return 401 when accessing other routes without login", async() => {
+      const response = await request(app).get("/api/cars").send();
+
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty("error", "Unauthorized");
+    })
   });
 });
+

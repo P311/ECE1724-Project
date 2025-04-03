@@ -16,22 +16,23 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
-router.get("/:id", middleware.authGuard, async (req, res, next) => {
-  try {
-    const comparisonId = req.params.id;
-    // TODO: Fetch comparison details by ID
-    const comparison = await db.getComparisonById(comparisonId);
-    if (!comparison) {
-      return res.status(404).json({ error: "Comparison does not exist" });
+router.get(
+  "/:id",
+  middleware.authGuard,
+  middleware.checkComparisonExists,
+  async (req, res, next) => {
+    try {
+      const comparisonId = req.params.id;
+      const comparison = await db.getComparisonById(Number(comparisonId));
+      res.status(200).json(comparison);
+    } catch (error) {
+      next(error);
     }
-    res.status(200).json(comparison);
-  } catch (error) {
-    next(error);
-  }
-});
+  },
+);
 
 router.post(
   "/",
@@ -41,7 +42,6 @@ router.post(
     try {
       const userId = req.user.id;
       const { cars } = req.body;
-      // TODO: Validate car IDs and create comparison
       const comparison = await db.createComparison(userId, cars);
       res.status(201).json({
         message: "Comparison created successfully",
@@ -50,7 +50,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.delete(
@@ -60,8 +60,7 @@ router.delete(
   async (req, res, next) => {
     try {
       const comparisonId = req.params.id;
-      // TODO: Delete comparison by ID
-      const deleted = await db.deleteComparison(comparisonId);
+      const deleted = await db.deleteComparison(Number(comparisonId));
       if (!deleted) {
         return res
           .status(400)
@@ -71,7 +70,7 @@ router.delete(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 module.exports = router;

@@ -41,7 +41,7 @@ const dbOperations = {
     try {
       const car = await prisma.car.findUnique({
         where: {
-          id,
+          id: carId,
         },
       });
       if (!car) {
@@ -96,8 +96,9 @@ const dbOperations = {
       const comparison = await prisma.comparison.create({
         data: {
           user_id: userId,
-          user,
-          cars: carObjects,
+          cars: {
+            connect: cars.map((car) => ({ id: car })),
+          },
         },
         include: {
           cars: {
@@ -117,8 +118,10 @@ const dbOperations = {
         where: {
           user_id: userId,
         },
-        cars: {
-          orderBy: { id: "asc" },
+        include: {
+          cars: {
+            orderBy: { id: "asc" },
+          },
         },
       });
 
@@ -204,9 +207,7 @@ const dbOperations = {
           grade,
           content,
           car_id: carId,
-          car,
           user_id: userId,
-          user,
         },
         include: {
           car: true,
@@ -219,13 +220,12 @@ const dbOperations = {
       throw error;
     }
   },
-  getReviewsByCarId: async (carId, page) => {
+  getReviewsByCarId: async (car_id, page) => {
     try {
       const limit = 10; // Default 10 Reviews per fetch
-
       const reviews = await prisma.review.findMany({
         where: {
-          car_id: carId,
+          car_id: car_id,
         },
         take: limit,
         skip: (page - 1) * limit,
@@ -243,9 +243,11 @@ const dbOperations = {
         where: {
           id: reviewId,
         },
-        // data: {
-
-        // }
+        data: {
+          // conditional object properties
+          ...(action === "like" && { num_likes: { increment: 1 } }),
+          ...(action === "dislike" && { dislikes: { increment: 1 } }),
+        },
       });
       return updatedReview;
     } catch (error) {
