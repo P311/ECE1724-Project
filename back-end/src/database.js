@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
+const { get } = require("./routes/users");
 
 const dbOperations = {
   // db operations on Car
@@ -220,6 +221,7 @@ const dbOperations = {
       throw error;
     }
   },
+
   getReviewsByCarId: async (car_id, page) => {
     try {
       const limit = 10; // Default 10 Reviews per fetch
@@ -237,6 +239,22 @@ const dbOperations = {
       throw error;
     }
   },
+
+  getReviewsByUserId: async (userId) => {
+    try {
+      const reviews = await prisma.review.findMany({
+        where: {
+          user_id: userId,
+        },
+        orderBy: { id: "asc" },
+      });
+
+      return reviews;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   updateReviewLikesDislikes: async (reviewId, action) => {
     try {
       const updatedReview = await prisma.review.update({
