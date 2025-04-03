@@ -15,22 +15,22 @@ describe("Reviews API", () => {
     await utils.insertMockReviews();
   });
 
-  describe("GET /api/reviews", () => {
+  describe("GET /api/reviews/by-car", () => {
 
     it("should return 401 if no token is provided", async () => {
-      const res = await request(app).get("/api/reviews");
+      const res = await request(app).get("/api/reviews/by-car");
       expect(res.status).toBe(401);
       expect(res.body).toEqual({ error: "Unauthorized" });
     });
 
     it("should return 200 with a list of reviews if token is valid", async () => {
       const res = await request(app)
-        .get("/api/reviews?car_id=1")
+        .get("/api/reviews/by-car?car_id=1")
         .set("Authorization", validToken);
       expect(res.status).toBe(200);
       expect(res.body.length).toBe(2);
       const res2 = await request(app)
-      .get("/api/reviews?car_id=2")
+      .get("/api/reviews/by-car?car_id=2")
       .set("Authorization", validToken);
       expect(res2.status).toBe(200);
       // only one page even if there're 20
@@ -39,7 +39,7 @@ describe("Reviews API", () => {
 
     it("should return different pages when specified", async () => {
       const res = await request(app)
-        .get("/api/reviews?car_id=2&page=1")
+        .get("/api/reviews/by-car?car_id=2&page=1")
         .set("Authorization", validToken);
       const res2 = await request(app)
       .get("/api/reviews?car_id=2&page=2")
