@@ -124,7 +124,6 @@ const validateComparisonForm = async (req, res, next) => {
   try {
     const { cars } = req.body;
 
-
     // Validate cars is a non-empty array and each car ID exists in the database
     if (!Array.isArray(cars) || cars.length === 0) {
       return res.status(400).json({

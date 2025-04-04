@@ -38,9 +38,16 @@ describe("User Routes", () => {
       // send twice
       const response = await request(app).post("/api/users/register").send(mockUser);
 
-      expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty("errors");
-      expect(response.body.errors).toContain("Email is already registered");
+      expect(response.status).toBe(409);
+      expect(response.body).toHaveProperty("error");
+      expect(response.body.message).toContain("Email is already registered");
+
+      // send with same user name
+      const response2 = await request(app).post("/api/users/register").send({...mockUser, email: "new_email@gmail.com"});
+
+      expect(response2.status).toBe(409);
+      expect(response2.body).toHaveProperty("error");
+      expect(response2.body.message).toContain("Username is already registered");
     });
 
     it("should return 400 for invalid input", async () => {
