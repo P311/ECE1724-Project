@@ -16,12 +16,25 @@ router.get("/", middleware.authGuard, async (req, res, next) => {
         error: "Query parameters 'limit' and 'page' must be positive integers.",
       });
     }
-
-    // Page must be at least 1
-    const cars = await db.getCars({
+    const baseQuery = {
       limit: limit ? limit : 10,
       page: page ? page : 1,
-    });
+    };
+    if (req.query.country) {
+      baseQuery.country = req.query.country;
+    }
+    if (req.query.type) {
+      baseQuery.body_type = req.query.body_type;
+    }
+    if (req.query.make) {
+      baseQuery.make = req.query.make;
+    }
+    if (req.query.model) {
+      baseQuery.model = req.query.model;
+    }
+
+    // Page must be at least 1
+    const cars = await db.getCars(baseQuery);
     res
       .status(200)
       .json({ cars, page: page ? page : 1, limit: limit ? limit : 10 });

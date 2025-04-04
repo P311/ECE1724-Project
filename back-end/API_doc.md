@@ -137,6 +137,9 @@ Unlike paper management system in our assignment, we need to allow the user to s
 Check user behavior in https://www.cars.com/research/compare/ : select make -> select model -> select year.
 
 Note: Each time only 10 cars are returned.
+#### Query Parameters
+filter by country, make, model, type (body_type in schema), and price range(min_price and max_price) are supported.
+E.g: /api/cars?country=Japan&make=Toyota&model=Corolla&type=Sedan
 #### Response:
 - 200 OK
 ```

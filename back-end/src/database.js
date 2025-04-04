@@ -23,7 +23,8 @@ const dbOperations = {
         where: {
           ...(filters.make && { make: filters.make }),
           ...(filters.model && { model: filters.model }),
-          ...(filters.year && { year: filters.year }),
+          ...(filters.country && { country: filters.country }),
+          ...(filters.type && { type: filters.type }),
         },
         take: filters.limit,
         skip: (filters.page - 1) * filters.limit,
