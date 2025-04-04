@@ -6,10 +6,23 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 function Register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [popupText, setPopupText] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,17 +36,20 @@ function Register() {
     })
       .then((response) => {
         if (response.ok) {
-          alert("Registration successful");
-          window.location.href = "/login";
+          setPopupText("Registration successful");
+        } else if (response.status === 400) {
+          return response.json().then((data) => {
+            setPopupText("An error occurred: " + data.errors);
+          });
         } else {
           return response.json().then((data) => {
-            alert("An error occurred: " + data.errors);
+            setPopupText("An error occurred: " + data.message);
           });
         }
       })
       .catch((error) => {
         console.error("Error:", error);
-        alert("An error occurred. Please try again.");
+        setPopupText("An error occurred. Please try again.");
       });
   };
 
@@ -130,6 +146,7 @@ function Register() {
             </Tooltip>
           </TooltipProvider>
         </div>
+
         <button
           type="submit"
           className="w-full bg-cyan-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-cyan-600"
@@ -137,6 +154,28 @@ function Register() {
           Sign Up
         </button>
       </form>
+      <AlertDialog open={popupText !== ""}>
+        <AlertDialogTrigger></AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Registration Result</AlertDialogTitle>
+            <AlertDialogDescription>{popupText}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => {
+                if (popupText == "Registration successful") {
+                  window.location.href = "/login";
+                } else {
+                  setPopupText("");
+                }
+              }}
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -24,13 +24,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-function Profile (){
+function Profile() {
   const [user, setUser] = useState({
     username: "",
     email: "",
     numberOfLikes: 0,
   });
-  
+
   const items = [
     {
       title: "Home",
@@ -53,7 +53,7 @@ function Profile (){
       icon: MessageCircle,
     },
   ];
-  
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
@@ -72,7 +72,7 @@ function Profile (){
         console.error("Error fetching user info:", error);
       }
     };
-  
+
     fetchUserInfo();
   }, []);
 
@@ -120,6 +120,6 @@ function Profile (){
       </SidebarProvider>
     </div>
   );
-};
+}
 
 export default Profile;
