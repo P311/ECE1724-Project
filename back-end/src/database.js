@@ -316,6 +316,17 @@ const dbOperations = {
           ...(action === "dislike" && { dislikes: { increment: 1 } }),
         },
       });
+
+      if (action === "like") {
+        await prisma.user.update({
+          where: {
+            id: updatedReview.user_id,
+          },
+          data: {
+            num_likes: { increment: 1 },
+          },
+        });
+      }
       return updatedReview;
     } catch (error) {
       throw error;
