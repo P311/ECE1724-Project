@@ -39,6 +39,54 @@ const dbOperations = {
     }
   },
 
+  getCarsOptions: async () => {
+    // Get all unique values for make and model combination, country, and type
+    try {
+      const makesRaw = await prisma.car.findMany({
+        distinct: ["make", "model"],
+        select: {
+          make: true,
+          model: true,
+        },
+      });
+
+      const makes = makesRaw.reduce((acc, { make, model }) => {
+        const existingMake = acc.find((item) => item.make === make);
+        if (existingMake) {
+          existingMake.model.push(model);
+        } else {
+          acc.push({ make, model: [model] });
+        }
+        return acc;
+      }, []);
+      const countriesRaw = await prisma.car.findMany({
+        distinct: ["country"],
+        select: {
+          country: true,
+        },
+      });
+
+      const countries = countriesRaw
+        .map(({ country }) => country)
+        .filter((country) => country !== null);
+
+      const typesRaw = await prisma.car.findMany({
+        distinct: ["body_type"],
+        select: {
+          body_type: true,
+        },
+      });
+
+      const types = typesRaw
+        .map(({ body_type }) => body_type)
+        .filter((body_type) => body_type !== null);
+
+      return { makes, countries, types };
+    } catch (error) {
+      throw error;
+    }
+  },
+
   getCarById: async (carId) => {
     try {
       const car = await prisma.car.findUnique({

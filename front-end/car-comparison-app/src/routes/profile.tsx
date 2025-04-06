@@ -39,7 +39,7 @@ function Profile() {
     },
     {
       title: "Create A Comparison",
-      url: "/create-comparison",
+      url: "/choose",
       icon: Car,
     },
     {
@@ -57,13 +57,19 @@ function Profile() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const response = await fetch("/api/users");
+        const token = localStorage.getItem("jwt");
+        console.log(token);
+        const response = await fetch("/api/users", {
+          headers: {
+            Authorization: `${token}`,
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setUser({
             username: data.username,
             email: data.email,
-            numberOfLikes: data.numberOfLikes,
+            numberOfLikes: data.num_likes,
           });
         } else {
           console.error("Failed to fetch user info");

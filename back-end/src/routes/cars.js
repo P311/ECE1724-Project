@@ -43,6 +43,15 @@ router.get("/", middleware.authGuard, async (req, res, next) => {
   }
 });
 
+router.get("/options", middleware.authGuard, async (req, res, next) => {
+  try {
+    const data = await db.getCarsOptions();
+    res.status(200).json(data);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get(
   "/:id",
   middleware.authGuard,
