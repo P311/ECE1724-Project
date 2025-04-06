@@ -2,6 +2,13 @@ import React, { ChangeEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"; // or your preferred navigation
 import { Button } from "@/components/ui/button"; // Adjust the import path as needed
 import { loadImageFromBucket } from "@/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Car = {
   id: number;
@@ -33,13 +40,12 @@ function Choose() {
   const [selectedCarType, setSelectedCarType] = useState<string>("");
   const [inputModel, setInputModel] = useState<string>("");
 
-
   // COMPARISON CART (max 4 cars)
   const [comparisonCart, setComparisonCart] = useState<Car[]>([]);
 
   // MODALS
   const [selectedCar, setSelectedCar] = useState<Car | null>(null); // For car-detail modal
-  const [isCartOpen, setIsCartOpen] = useState<boolean>(false);     // For comparison modal
+  const [isCartOpen, setIsCartOpen] = useState<boolean>(false); // For comparison modal
 
   // // Dropdown options
   const [options, setOptions] = useState<any>([]); // For car models
@@ -63,7 +69,7 @@ function Choose() {
         const makes = new Set<string>();
         data.makes.forEach((make: any) => {
           makes.add(make.make);
-        })
+        });
         setBrands(Array.from(makes));
         setCountries(data.countries);
         setCarTypes(data.types);
@@ -85,15 +91,19 @@ function Choose() {
         cars.map(async (car) => ({
           ...car,
           car_image_path: await loadImageFromBucket(car.car_image_path),
-        }))
+        })),
       );
       return updatedCars;
     };
     const queryParts: string[] = [];
-    if (selectedCountry) queryParts.push(`country=${encodeURIComponent(selectedCountry)}`);
-    if (selectedBrand) queryParts.push(`make=${encodeURIComponent(selectedBrand)}`);
-    if (inputModel) queryParts.push(`model=${encodeURIComponent(inputModel)}`);
-    if (selectedCarType) queryParts.push(`type=${encodeURIComponent(selectedCarType)}`);
+    if (selectedCountry && selectedCountry != "All")
+      queryParts.push(`country=${encodeURIComponent(selectedCountry)}`);
+    if (selectedBrand && selectedBrand != "All")
+      queryParts.push(`make=${encodeURIComponent(selectedBrand)}`);
+    if (inputModel && inputModel != "All")
+      queryParts.push(`model=${encodeURIComponent(inputModel)}`);
+    if (selectedCarType && selectedCarType != "All")
+      queryParts.push(`type=${encodeURIComponent(selectedCarType)}`);
 
     const queryString = queryParts.length > 0 ? "?" + queryParts.join("&") : "";
     const url = `/api/cars${queryString}`;
@@ -112,13 +122,17 @@ function Choose() {
     }
   };
 
-  const selectBrand = (e: ChangeEvent) => {
-    const target = e.target as HTMLSelectElement;
-    const value = target.value;
+  const selectBrand = (value: string) => {
     setSelectedBrand(value);
     console.log(value, options);
-    setCarModels(options.makes.filter((option: any) => option.make === value)[0].model);
-  }
+    if (value === "All") {
+      setCarModels([]);
+      return;
+    }
+    setCarModels(
+      options.makes.filter((option: any) => option.make === value)[0].model,
+    );
+  };
 
   const handleReset = () => {
     setSelectedBrand("");
@@ -166,13 +180,13 @@ function Choose() {
     navigate("/compare");
   };
 
-
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-cyan-500 to-blue-500 p-4">
-
       {/* PAGE TITLE & DESCRIPTION */}
       <h1 className="text-4xl font-bold text-white mb-2">Choose Your Car</h1>
-      <p className="text-white/90 mb-6">Filter and add cars to your comparison cart!</p>
+      <p className="text-white/90 mb-6">
+        Filter and add cars to your comparison cart!
+      </p>
 
       {/* BIG "COMPARISON" BUTTON */}
       <Button
@@ -189,19 +203,21 @@ function Choose() {
           <label htmlFor="brand" className="mb-1 font-semibold">
             Brand
           </label>
-          <select
-            id="brand"
-            className="text-black px-2 py-1 rounded"
-            value={selectedBrand}
-            onChange={(e) => selectBrand(e)}
-          >
-            <option value="">All Brands</option>
-            {brands.map((brand) => (
-              <option value={brand} key={brand}>
-                {brand}
-              </option>
-            ))}
-          </select>
+          <Select id="brand" onValueChange={selectBrand}>
+            <SelectTrigger className="w-[250px] bg-white text-xl text-black">
+              <SelectValue placeholder="Brand" />
+            </SelectTrigger>
+            <SelectContent className="bg-white text-black">
+              <SelectItem value="All" className="text-xl">
+                All Brands
+              </SelectItem>
+              {brands.map((brand) => (
+                <SelectItem value={brand} key={brand} className="text-xl">
+                  {brand}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* COUNTRY */}
@@ -209,19 +225,21 @@ function Choose() {
           <label htmlFor="country" className="mb-1 font-semibold">
             Country
           </label>
-          <select
-            id="country"
-            className="text-black px-2 py-1 rounded"
-            value={selectedCountry}
-            onChange={(e) => setSelectedCountry(e.target.value)}
-          >
-            <option value="">All Countries</option>
-            {countries.map((country) => (
-              <option value={country} key={country}>
-                {country}
-              </option>
-            ))}
-          </select>
+          <Select id="country" onValueChange={setSelectedCountry}>
+            <SelectTrigger className="w-[250px] bg-white text-xl text-black">
+              <SelectValue placeholder="Country" />
+            </SelectTrigger>
+            <SelectContent className="bg-white text-black">
+              <SelectItem value="All" className="text-xl">
+                All Countries
+              </SelectItem>
+              {countries.map((country) => (
+                <SelectItem value={country} key={country} className="text-xl">
+                  {country}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* CAR TYPE */}
@@ -229,40 +247,43 @@ function Choose() {
           <label htmlFor="cartype" className="mb-1 font-semibold">
             Car Type
           </label>
-          <select
-            id="cartype"
-            className="text-black px-2 py-1 rounded"
-            value={selectedCarType}
-            onChange={(e) => setSelectedCarType(e.target.value)}
-          >
-            <option value="">All Types</option>
-            {carTypes.map((type) => (
-              <option value={type} key={type}>
-                {type}
-              </option>
-            ))}
-          </select>
+          <Select id="cartype" onValueChange={setSelectedCarType}>
+            <SelectTrigger className="w-[250px] bg-white text-xl text-black">
+              <SelectValue placeholder="Car Type" />
+            </SelectTrigger>
+            <SelectContent className="bg-white text-black">
+              <SelectItem value="All" className="text-xl">
+                All Types
+              </SelectItem>
+              {carTypes.map((type) => (
+                <SelectItem value={type} key={type} className="text-xl">
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-
-        {/* MODEL TEXT INPUT */}
+        {/* MODEL */}
         <div className="flex flex-col">
           <label htmlFor="model" className="mb-1 font-semibold">
             Model
           </label>
-          <select
-            id="model"
-            className="text-black px-2 py-1 rounded"
-            value={inputModel}
-            onChange={(e) => setInputModel(e.target.value)}
-          >
-            <option value="">All Models</option>
-            {carModels.map((model) => (
-              <option value={model} key={model}>
+          <Select id="model" onValueChange={setInputModel}>
+            <SelectTrigger className="w-[250px] bg-white text-xl text-black">
+              <SelectValue placeholder="Model" />
+            </SelectTrigger>
+            <SelectContent className="bg-white text-black">
+              <SelectItem value="All" className="text-xl">
+                All Models
+              </SelectItem>
+              {carModels.map((model) => (
+                <SelectItem value={model} key={model} className="text-xl">
                   {model}
-              </option>
-            ))}
-          </select>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* FIND & RESET BUTTONS */}
@@ -367,11 +388,12 @@ function Choose() {
               <strong>Doors:</strong> {selectedCar.num_doors ?? "-"}
             </p>
             <p>
-              <strong>MPG (City/Highway):</strong>{" "}
-              {selectedCar.mpg_city ?? "-"} / {selectedCar.mpg_highway ?? "-"}
+              <strong>MPG (City/Highway):</strong> {selectedCar.mpg_city ?? "-"}{" "}
+              / {selectedCar.mpg_highway ?? "-"}
             </p>
             <p>
-              <strong>Horsepower (HP):</strong> {selectedCar.horsepower_hp ?? "-"}
+              <strong>Horsepower (HP):</strong>{" "}
+              {selectedCar.horsepower_hp ?? "-"}
             </p>
             <p>
               <strong>Torque (ft-lb):</strong> {selectedCar.torque_ftlb ?? "-"}
@@ -380,11 +402,11 @@ function Choose() {
               <strong>0-60 Accel (s):</strong> {selectedCar.acceleration ?? "-"}
             </p>
             <Button
-                onClick={() => handleAddToComparison(selectedCar)}
-                className="bg-cyan-300 text-sky-800 font-bold hover:bg-cyan-500 w-full"
-              >
-                Add to comparison
-              </Button>
+              onClick={() => handleAddToComparison(selectedCar)}
+              className="bg-cyan-300 text-sky-800 font-bold hover:bg-cyan-500 w-full"
+            >
+              Add to comparison
+            </Button>
           </div>
         </div>
       )}
