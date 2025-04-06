@@ -13,3 +13,4 @@ test:
 	npm run test
 import:
 	node ./import_data_script.js > output.log
+	node ./load_image.js

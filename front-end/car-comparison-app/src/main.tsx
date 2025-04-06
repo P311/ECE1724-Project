@@ -9,14 +9,34 @@ import Profile from "./routes/profile";
 import { Car, ComparisonCartContext } from "./context/ComparisonCartContext";
 import Comparison from "./routes/comparison";
 import Choose from "./routes/choose";
+import { Navigate } from "react-router-dom";
+
+const isAuthenticated = () => {
+  const token = localStorage.getItem("jwt");
+  const expirationTime = localStorage.getItem("jwt_expiration");
+  if (!token || !expirationTime) {
+    return false;
+  }
+  const currentTime = Date.now();
+  return currentTime < parseInt(expirationTime);
+};
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
   { path: "/login", element: <Login /> },
   { path: "/register", element: <Register /> },
-  { path: "/profile", element: <Profile /> },
-  { path: "/choose", element: <Choose /> },
-  { path: "/comparison", element: <Comparison /> },
+  {
+    path: "/profile",
+    element: isAuthenticated() ? <Profile /> : <Navigate to="/login" />,
+  },
+  {
+    path: "/choose",
+    element: isAuthenticated() ? <Choose /> : <Navigate to="/login" />,
+  },
+  {
+    path: "/comparison",
+    element: isAuthenticated() ? <Comparison /> : <Navigate to="/login" />,
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

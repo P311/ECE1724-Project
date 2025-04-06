@@ -22,7 +22,9 @@ function Login() {
       })
       .then((data) => {
         const { token } = data;
-        localStorage.setItem("jwt", token); // Store JWT in localStorage
+        const expirationTime = Date.now() + 3600000; // 1 hour from now
+        localStorage.setItem("jwt", token);
+        localStorage.setItem("jwt_expiration", expirationTime.toString());
         console.log(`JWT stored: ${token}`);
         window.location.href = "/profile";
       })
