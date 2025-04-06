@@ -1,27 +1,7 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom"; // or your preferred navigation
 import { Button } from "@/components/ui/button"; // Adjust the import path as needed
-
-type Car = {
-  id: number;
-  make: string;
-  model: string;
-  year: number;
-  generation?: string;
-  engine_size_cc?: number;
-  fuel_type?: string;
-  transmission?: string;
-  drivetrain?: string;
-  body_type: string;
-  num_doors?: number;
-  country: string;
-  mpg_city?: number;
-  mpg_highway?: number;
-  horsepower_hp?: number;
-  torque_ftlb?: number;
-  acceleration?: number;
-  car_image_path: string;
-};
+import { ComparisonCartContext, Car } from "../context/ComparisonCartContext";
 
 function Choose() {
   const navigate = useNavigate();
@@ -33,16 +13,27 @@ function Choose() {
   const [inputModel, setInputModel] = useState<string>("");
   const [selectedYear, setSelectedYear] = useState<string>("");
 
-
   // COMPARISON CART (max 4 cars)
-  const [comparisonCart, setComparisonCart] = useState<Car[]>([]);
+  const context = useContext(ComparisonCartContext);
+  if (!context) {
+    throw new Error("This page must be used within a ComparisonCartProvider");
+  }
+
+  const { comparisonCart, setComparisonCart } = context;
 
   // MODALS
   const [selectedCar, setSelectedCar] = useState<Car | null>(null); // For car-detail modal
-  const [isCartOpen, setIsCartOpen] = useState<boolean>(false);     // For comparison modal
+  const [isCartOpen, setIsCartOpen] = useState<boolean>(false); // For comparison modal
 
   // Dropdown options
-  const brands: string[] = ["Toyota", "Honda", "Ford", "BMW", "Tesla", "Hyundai"];
+  const brands: string[] = [
+    "Toyota",
+    "Honda",
+    "Ford",
+    "BMW",
+    "Tesla",
+    "Hyundai",
+  ];
   const countries: string[] = ["Japan", "Germany", "USA", "Korea", "China"];
   const carTypes: string[] = ["Sedan", "SUV", "MPV", "EV", "Truck"];
 
@@ -216,10 +207,13 @@ function Choose() {
    *******************************/
   const handleFindCars = () => {
     const queryParts: string[] = [];
-    if (selectedCountry) queryParts.push(`country=${encodeURIComponent(selectedCountry)}`);
-    if (selectedBrand) queryParts.push(`make=${encodeURIComponent(selectedBrand)}`);
+    if (selectedCountry)
+      queryParts.push(`country=${encodeURIComponent(selectedCountry)}`);
+    if (selectedBrand)
+      queryParts.push(`make=${encodeURIComponent(selectedBrand)}`);
     if (inputModel) queryParts.push(`model=${encodeURIComponent(inputModel)}`);
-    if (selectedCarType) queryParts.push(`type=${encodeURIComponent(selectedCarType)}`);
+    if (selectedCarType)
+      queryParts.push(`type=${encodeURIComponent(selectedCarType)}`);
 
     const queryString = queryParts.length > 0 ? "?" + queryParts.join("&") : "";
     const url = `/api/cars${queryString}`;
@@ -270,7 +264,7 @@ function Choose() {
 
   // On "Compare" button click, navigate to /compare page
   const handleNavigateToCompare = () => {
-    navigate("/compare");
+    navigate("/comparison");
   };
 
   /********************************
@@ -283,7 +277,13 @@ function Choose() {
     const matchesYear = !selectedYear || car.year.toString() === selectedYear;
     const matchesModel =
       !inputModel || car.model.toLowerCase().includes(inputModel.toLowerCase());
-    return matchesBrand && matchesCountry && matchesType && matchesModel && matchesYear;
+    return (
+      matchesBrand &&
+      matchesCountry &&
+      matchesType &&
+      matchesModel &&
+      matchesYear
+    );
   });
 
   return (
@@ -298,7 +298,9 @@ function Choose() {
 
       {/* PAGE TITLE & DESCRIPTION */}
       <h1 className="text-4xl font-bold text-white mb-2">Choose Your Car</h1>
-      <p className="text-white/90 mb-6">Filter and add cars to your comparison cart!</p>
+      <p className="text-white/90 mb-6">
+        Filter and add cars to your comparison cart!
+      </p>
 
       {/* BIG "COMPARISON" BUTTON */}
       <Button
@@ -372,25 +374,24 @@ function Choose() {
 
         {/* YEAR */}
         <div className="flex flex-col">
-            <label htmlFor="year" className="mb-1 font-semibold">
-                Year
-            </label>
-            <select
-                id="year"
-                className="text-black px-2 py-1 rounded"
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-            >
-                <option value="">All Years</option>
-                <option value="2019">2019</option>
-                <option value="2020">2020</option>
-                <option value="2021">2021</option>
-                <option value="2022">2022</option>
-                <option value="2023">2023</option>
-                {/* Add as many years as needed */}
-            </select>
+          <label htmlFor="year" className="mb-1 font-semibold">
+            Year
+          </label>
+          <select
+            id="year"
+            className="text-black px-2 py-1 rounded"
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+          >
+            <option value="">All Years</option>
+            <option value="2019">2019</option>
+            <option value="2020">2020</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            {/* Add as many years as needed */}
+          </select>
         </div>
-
 
         {/* MODEL TEXT INPUT */}
         <div className="flex flex-col">
@@ -509,11 +510,12 @@ function Choose() {
               <strong>Doors:</strong> {selectedCar.num_doors ?? "-"}
             </p>
             <p>
-              <strong>MPG (City/Highway):</strong>{" "}
-              {selectedCar.mpg_city ?? "-"} / {selectedCar.mpg_highway ?? "-"}
+              <strong>MPG (City/Highway):</strong> {selectedCar.mpg_city ?? "-"}{" "}
+              / {selectedCar.mpg_highway ?? "-"}
             </p>
             <p>
-              <strong>Horsepower (HP):</strong> {selectedCar.horsepower_hp ?? "-"}
+              <strong>Horsepower (HP):</strong>{" "}
+              {selectedCar.horsepower_hp ?? "-"}
             </p>
             <p>
               <strong>Torque (ft-lb):</strong> {selectedCar.torque_ftlb ?? "-"}
