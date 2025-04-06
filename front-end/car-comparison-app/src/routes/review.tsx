@@ -143,17 +143,13 @@ function Review() {
     };
 
     try {
-      // If your server expects an Authorization token, retrieve it from local storage or context:
-      // const token = localStorage.getItem("accessToken"); // Example
-      const token = "<PUT_YOUR_JWT_TOKEN_IF_YOU_HAVE_IT>";
+      const token = localStorage.getItem("accessToken");
 
       const response = await fetch("/api/reviews", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // If your server expects "Authorization: Token <JWT>"
-          // or "Authorization: Bearer <JWT>", do something like:
-          // "Authorization": `Token ${token}`,
+          "Authorization": `Token ${token}`,  
         },
         body: JSON.stringify(bodyData),
       });
@@ -191,11 +187,13 @@ function Review() {
       const token = "<PUT_YOUR_JWT_TOKEN_IF_YOU_HAVE_IT>";
 
       // PUT /api/reviews/:id with { action: "like" } or { action: "dislike" }
+      const token = localStorage.getItem("accessToken");
+
       const response = await fetch(`/api/reviews/${reviewId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          // "Authorization": `Token ${token}`, // or Bearer
+          "Authorization": `Token ${token}`,
         },
         body: JSON.stringify({ action }),
       });
