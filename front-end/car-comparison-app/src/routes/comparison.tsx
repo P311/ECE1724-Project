@@ -13,6 +13,7 @@ function Comparison() {
   }
 
   const { comparisonCart, setComparisonCart } = context;
+  const [status, setStatus] = useState<"Idle" | "Saving" | "Saved">("Idle");
 
   const carAttributes: (keyof Car)[] = [
     "make",
@@ -39,6 +40,44 @@ function Comparison() {
     } else {
       navigate("/profile");
     }
+  };
+
+  const handleResetCart = () => {
+    setTimeout(() => {
+      setComparisonCart([]);
+      navigate("/profile");
+    }, 3000);
+  };
+
+  const handleSaveComparison = () => {
+    setStatus("Saving");
+    const token = localStorage.getItem("jwt");
+
+    const cars = comparisonCart.map((car) => car.id);
+    console.log(JSON.stringify(cars));
+
+    fetch("/api/comparisons", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${token}`,
+      },
+      body: JSON.stringify({ cars }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          setStatus("Idle");
+          throw new Error("Save failed");
+        } else {
+          console.log(`Comparison is now saved.`);
+          setStatus("Saved");
+          handleResetCart();
+        }
+      })
+      .catch((error) => {
+        setStatus("Idle");
+        console.error("Error when saving comparison:", error);
+      });
   };
 
   // Return
@@ -101,14 +140,25 @@ function Comparison() {
               })}
             </tbody>
           </table>
+
+          <Button
+            onClick={handleSaveComparison}
+            className="bg-emerald-500 text-white font-semibold rounded hover:bg-emerald-600 transition mt-4 px-4 py-2 !disabled:bg-grey-400 disabled:cursor-not-allowed"
+            disabled={status !== "Idle"}
+          >
+            Save
+          </Button>
+          {status == "Saving" ? (
+            <p className="text-gray-600 text-sm font-medium"> Saving... </p>
+          ) : status == "Saved" ? (
+            <p className="text-gray-600 text-sm font-medium">
+              Comparison saved, redirecting to profile page
+            </p>
+          ) : (
+            <></>
+          )}
         </>
       )}
-      <Button
-        onClick={handleBackNavigation}
-        className="bg-black text-white font-semibold rounded hover:bg-gray-800 transition mt-4 px-4 py-2"
-      >
-        Go Back
-      </Button>
     </div>
   );
 }
