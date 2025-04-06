@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"; // or your preferred navigation
 import { Button } from "@/components/ui/button"; // Adjust the import path as needed
 import { loadImageFromBucket } from "@/utils";
@@ -9,27 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-type Car = {
-  id: number;
-  make: string;
-  model: string;
-  year: number;
-  generation?: string;
-  engine_size_cc?: number;
-  fuel_type?: string;
-  transmission?: string;
-  drivetrain?: string;
-  body_type: string;
-  num_doors?: number;
-  country: string;
-  mpg_city?: number;
-  mpg_highway?: number;
-  horsepower_hp?: number;
-  torque_ftlb?: number;
-  acceleration?: number;
-  car_image_path: string;
-};
+import { ComparisonCartContext, Car } from "../context/ComparisonCartContext";
 
 function Choose() {
   const navigate = useNavigate();
@@ -41,7 +21,12 @@ function Choose() {
   const [inputModel, setInputModel] = useState<string>("");
 
   // COMPARISON CART (max 4 cars)
-  const [comparisonCart, setComparisonCart] = useState<Car[]>([]);
+  const context = useContext(ComparisonCartContext);
+  if (!context) {
+    throw new Error("This page must be used within a ComparisonCartProvider");
+  }
+
+  const { comparisonCart, setComparisonCart } = context;
 
   // MODALS
   const [selectedCar, setSelectedCar] = useState<Car | null>(null); // For car-detail modal
@@ -91,7 +76,7 @@ function Choose() {
         cars.map(async (car) => ({
           ...car,
           car_image_path: await loadImageFromBucket(car.car_image_path),
-        })),
+        }))
       );
       return updatedCars;
     };
@@ -130,7 +115,7 @@ function Choose() {
       return;
     }
     setCarModels(
-      options.makes.filter((option: any) => option.make === value)[0].model,
+      options.makes.filter((option: any) => option.make === value)[0].model
     );
   };
 
@@ -177,7 +162,7 @@ function Choose() {
 
   // On "Compare" button click, navigate to /compare page
   const handleNavigateToCompare = () => {
-    navigate("/compare");
+    navigate("/comparison");
   };
 
   return (

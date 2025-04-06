@@ -23,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
 function Profile() {
   const [user, setUser] = useState({
@@ -96,10 +97,10 @@ function Profile() {
                   {items.map((item) => (
                     <SidebarMenuItem key={item.title} className="mb-3">
                       <SidebarMenuButton asChild className="text-lg">
-                        <a href={item.url}>
+                        <Link to={item.url}>
                           <item.icon />
                           <span>{item.title}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
