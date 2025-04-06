@@ -54,7 +54,6 @@ function Comparison() {
     const token = localStorage.getItem("jwt");
 
     const cars = comparisonCart.map((car) => car.id);
-    console.log(JSON.stringify(cars));
 
     fetch("/api/comparisons", {
       method: "POST",
