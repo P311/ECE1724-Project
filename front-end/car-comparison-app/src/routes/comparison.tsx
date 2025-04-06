@@ -50,15 +50,15 @@ function Comparison() {
       >
         Go Back
       </Button>
-      <h1 className="text-3xl font-bold text-center mb-4 text-white bg-white/10 backdrop-blue-md px-4 py-2 rounded-xl inline-block">
-        Car Comparison
-      </h1>
       {comparisonCart.length == 0 ? (
         <>
           <p className="text-white">The Comparison Cart is empty.</p>
         </>
       ) : (
         <>
+          <h1 className="text-3xl font-bold text-center mb-4 text-white bg-white/10 backdrop-blue-md px-4 py-2 rounded-xl inline-block">
+            Car Comparison
+          </h1>
           <table className="w-full text-sm text-left rtl:text-right text-black">
             <thead className="text-xs uppercase">
               <tr>
