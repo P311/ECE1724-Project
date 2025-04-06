@@ -30,6 +30,18 @@ function Profile() {
     email: "",
     numberOfLikes: 0,
   });
+  const [reviews, setReviews] = useState<Review[]>([]);
+
+  interface Review {
+    id: number;
+    grade: number;
+    content: string;
+    car_id: number;
+    user_id: number;
+    created_at: string;
+    num_likes: number;
+    dislikes: number;
+  }
 
   const items = [
     {
@@ -80,6 +92,27 @@ function Profile() {
     };
 
     fetchUserInfo();
+
+    // load review from /api/reviews/by-user
+    const fetchReviews = async () => {
+      try {
+        const token = localStorage.getItem("jwt");
+        const response = await fetch("/api/reviews/by-user", {
+          headers: {
+            Authorization: `${token}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setReviews(data);
+        } else {
+          console.error("Failed to fetch reviews");
+        }
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    };
+    fetchReviews();
   }, []);
 
   return (
@@ -119,6 +152,19 @@ function Profile() {
                 <p className="text-xl pt-4">
                   Number of Likes: {user.numberOfLikes}
                 </p>
+                <p className="text-xl pt-4">
+                  My Reviews:
+                </p>
+                <ul className="list-disc pl-5 mt-2 mb-2">
+                  {reviews.map((review) => (
+                  <li key={review.id} className="text-lg">
+                    <p>{review.content}</p>
+                    <p className="text-sm text-gray-600">
+                    Likes: {review.num_likes}, Dislikes: {review.dislikes}
+                    </p>
+                  </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           </div>
