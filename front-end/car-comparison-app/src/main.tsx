@@ -10,21 +10,27 @@ import Choose from "./routes/choose";
 import { Navigate } from "react-router-dom";
 
 const isAuthenticated = () => {
-  return !!localStorage.getItem("jwt");
+  const token = localStorage.getItem("jwt");
+  const expirationTime = localStorage.getItem("jwt_expiration");
+  if (!token || !expirationTime) {
+    return false;
+  }
+  const currentTime = Date.now();
+  return currentTime < parseInt(expirationTime);
 };
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
   { path: "/login", element: <Login /> },
   { path: "/register", element: <Register /> },
-  { 
-    path: "/profile", 
-    element: isAuthenticated() ? <Profile /> : <Navigate to="/login" /> 
+  {
+    path: "/profile",
+    element: isAuthenticated() ? <Profile /> : <Navigate to="/login" />,
   },
-  { 
-    path: "/choose", 
-    element: isAuthenticated() ? <Choose /> : <Navigate to="/login" /> 
-  }
+  {
+    path: "/choose",
+    element: isAuthenticated() ? <Choose /> : <Navigate to="/login" />,
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
