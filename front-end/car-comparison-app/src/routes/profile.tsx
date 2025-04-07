@@ -60,11 +60,6 @@ function Profile() {
       url: "/comparisonsList",
       icon: FileText,
     },
-    {
-      title: "Reviews",
-      url: "/reviews",
-      icon: MessageCircle,
-    },
   ];
 
   useEffect(() => {
@@ -153,17 +148,15 @@ function Profile() {
                 <p className="text-xl pt-4">
                   Number of Likes: {user.numberOfLikes}
                 </p>
-                <p className="text-xl pt-4">
-                  My Reviews:
-                </p>
+                <p className="text-xl pt-4">My Reviews:</p>
                 <ul className="list-disc pl-5 mt-2 mb-2">
                   {reviews.map((review) => (
-                  <li key={review.id} className="text-lg">
-                    <p>{review.content}</p>
-                    <p className="text-sm text-gray-600">
-                    Likes: {review.num_likes}, Dislikes: {review.dislikes}
-                    </p>
-                  </li>
+                    <li key={review.id} className="text-lg">
+                      <p>{review.content}</p>
+                      <p className="text-sm text-gray-600">
+                        Likes: {review.num_likes}, Dislikes: {review.dislikes}
+                      </p>
+                    </li>
                   ))}
                 </ul>
               </CardContent>
