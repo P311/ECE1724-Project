@@ -11,6 +11,7 @@ import Comparison from "./routes/comparison";
 import Choose from "./routes/choose";
 import { Navigate } from "react-router-dom";
 import Review from "./routes/review";
+import ComparisonsList from "./routes/comparisonList";
 
 const isAuthenticated = () => {
   const token = localStorage.getItem("jwt");
@@ -44,7 +45,10 @@ const router = createBrowserRouter([
     path: "/comparison",
     element: isAuthenticated() ? <Comparison /> : <Navigate to="/login" />,
   },
-
+  {
+    path: "/comparisonsList",
+    element: isAuthenticated() ? <ComparisonsList /> : <Navigate to="/login" />,
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

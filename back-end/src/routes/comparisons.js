@@ -10,7 +10,13 @@ router.get(
   async (req, res, next) => {
     try {
       const userId = req.user.id;
-      // TODO: Fetch comparisons for the user
+      const { page = 1 } = req.query;
+      if (!Number.isInteger(Number(page)) || page <= 0) {
+        return res.status(400).json({
+          error: "Invalid Input",
+          message: "Page must be a positive integer",
+        });
+      }
       const comparisons = await db.getComparisonsByUserId(userId);
       res.status(200).json(comparisons);
     } catch (error) {

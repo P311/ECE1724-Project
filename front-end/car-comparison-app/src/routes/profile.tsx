@@ -45,7 +45,7 @@ function Profile() {
     },
     {
       title: "View Comparisons",
-      url: "/comparisons",
+      url: "/comparisonsList",
       icon: FileText,
     },
     {
