@@ -10,6 +10,7 @@ import { Car, ComparisonCartContext } from "./context/ComparisonCartContext";
 import Comparison from "./routes/comparison";
 import Choose from "./routes/choose";
 import { Navigate } from "react-router-dom";
+import Review from "./routes/review";
 import ComparisonsList from "./routes/comparisonList";
 
 const isAuthenticated = () => {
@@ -34,6 +35,12 @@ const router = createBrowserRouter([
     path: "/choose",
     element: isAuthenticated() ? <Choose /> : <Navigate to="/login" />,
   },
+
+  {
+    path: "/review/:carId",
+    element: isAuthenticated() ? <Review /> : <Navigate to="/login" />,
+  },
+  
   {
     path: "/comparison",
     element: isAuthenticated() ? <Comparison /> : <Navigate to="/login" />,
