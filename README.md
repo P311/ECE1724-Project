@@ -119,7 +119,7 @@ In the Create a Comparison Page, user can see the detail of the car and enter th
 
 After clicking the button, the user can see the reviews of the car
 
-![](./screenshots/review_home.png)
+![](./screenshots/review_home.png) 
 
 If the user want to create a review, the user can click on the Add a new review to add review to this car
 
