@@ -8,6 +8,7 @@ import Register from "./routes/register";
 import Profile from "./routes/profile";
 import Choose from "./routes/choose";
 import { Navigate } from "react-router-dom";
+import Review from "./routes/review";
 
 const isAuthenticated = () => {
   const token = localStorage.getItem("jwt");
@@ -31,6 +32,11 @@ const router = createBrowserRouter([
     path: "/choose",
     element: isAuthenticated() ? <Choose /> : <Navigate to="/login" />,
   },
+
+  {
+    path: "/review/:carId",
+    element: isAuthenticated() ? <Review /> : <Navigate to="/login" />,
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

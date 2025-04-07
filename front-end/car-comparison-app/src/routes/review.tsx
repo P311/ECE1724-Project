@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // if needed for navigation
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { loadImageFromBucket } from "@/utils";
 import {
   FileText,
   Home,
@@ -30,101 +31,121 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-// Example user context (dummy). In a real app, you'd get the user from an auth context/JWT.
+// This is just a placeholder for demonstration.
+// In a real app, you'd get the user from auth context or decode the token on the server.
 const mockCurrentUser = {
   id: 3,
   username: "testuser",
 };
 
 function Review() {
-  // ---------------------------
-  // 1) Car Detail (Dummy)
-  // ---------------------------
-  // In a real scenario, you might fetch this from `/api/cars/:id`
-  const [car, setCar] = useState({
-    id: 1,
-    make: "Toyota",
-    model: "Camry",
-    year: 2020,
-    generation: "XV70",
-    engine_size_cc: 2494,
-    fuel_type: "Gasoline",
-    transmission: "Automatic",
-    drivetrain: "FWD",
-    body_type: "Sedan",
-    num_doors: 4,
-    country: "Japan",
-    mpg_city: 29,
-    mpg_highway: 41,
-    horsepower_hp: 203,
-    torque_ftlb: 184,
-    acceleration: 8.2,
-    car_image_path: "https://via.placeholder.com/600x400?text=Toyota+Camry",
-  });
+  const { carId } = useParams();
+  const numericCarId = parseInt(carId || "0", 10);
 
   // ---------------------------
-  // 2) Reviews (Dummy Data)
+  // 1) Car Details (GET /api/cars/:id)
   // ---------------------------
-  // userLiked / userDisliked track if our user has liked/disliked each review
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      grade: 4, // out of 5
-      content: "Really smooth ride and great fuel efficiency.",
-      car_id: 1,
-      user_id: 42,
-      created_at: "2025-04-01T10:30:00.000Z",
-      num_likes: 2,
-      num_dislikes: 0,
-      userLiked: false,
-      userDisliked: false,
-    },
-    {
-      id: 2,
-      grade: 5,
-      content: "Love the interior design!",
-      car_id: 1,
-      user_id: 10,
-      created_at: "2025-04-02T14:15:00.000Z",
-      num_likes: 5,
-      num_dislikes: 1,
-      userLiked: true,
-      userDisliked: false,
-    },
-  ]);
+  const [car, setCar] = useState<any | null>(null);
+  const [loadingCar, setLoadingCar] = useState(true);
 
-  // ---------------------------
-  // 3) Pagination for Reviews (20 per page)
-  // ---------------------------
-  const [reviewPage, setReviewPage] = useState(1);
-  const reviewsPerPage = 20;
-  const totalReviewPages = Math.ceil(reviews.length / reviewsPerPage);
+  const fetchCar = async () => {
+    try {
+      setLoadingCar(true);
+      const token = localStorage.getItem("jwt");
+      if (!token) {
+        throw new Error("No token found. Please log in.");
+      }
 
-  // Slicing reviews for the current page
-  const startIndex = (reviewPage - 1) * reviewsPerPage;
-  const endIndex = startIndex + reviewsPerPage;
-  const currentReviews = reviews.slice(startIndex, endIndex);
+      const res = await fetch(`/api/cars/${numericCarId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `${token}`,
+        },
+      });
+      if (!res.ok) {
+        throw new Error("Failed to fetch car details");
+      }
+      const data = await res.json();
 
-  const handleNextReviewPage = () => {
-    if (reviewPage < totalReviewPages) {
-      setReviewPage(reviewPage + 1);
+      const imageUrl = await loadImageFromBucket(data.car_image_path);
+
+      // Then store the full image URL in `car` state
+      setCar({
+        ...data,
+        car_image_path: imageUrl,
+      });
+    } catch (error) {
+      console.error("Error fetching car details:", error);
+      setCar(null);
+    } finally {
+      setLoadingCar(false);
     }
   };
 
-  const handlePrevReviewPage = () => {
-    if (reviewPage > 1) {
-      setReviewPage(reviewPage - 1);
+  useEffect(() => {
+    if (numericCarId) {
+      fetchCar();
+    }
+  }, [numericCarId]);
+
+  // ---------------------------
+  // 2) Reviews (GET /api/reviews/by-car?car_id=<carId>&page=<page>)
+  //    Each page has up to 10 reviews. The server's page starts at 1 by default.
+  // ---------------------------
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewPage, setReviewPage] = useState(1); // The UI also starts at 1
+  const [hasNextPage, setHasNextPage] = useState(true);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
+  const fetchReviews = async (page: number) => {
+    try {
+      setLoadingReviews(true);
+      const token = localStorage.getItem("jwt");
+      if (!token) {
+        throw new Error("No token found. Please log in.");
+      }
+
+      const res = await fetch(
+        `/api/reviews/by-car?car_id=${numericCarId}&page=${page}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `${token}`,
+          },
+        }
+      );
+      if (!res.ok) {
+        throw new Error("Failed to fetch reviews");
+      }
+      const data = await res.json();
+      setReviews(data);
+
+      // If exactly 10 returned, we assume there's a next page
+      setHasNextPage(data.length === 10);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      setReviews([]);
+    } finally {
+      setLoadingReviews(false);
     }
   };
 
-  // If we add a new review, put it at the top, reset page to 1
-  const addReviewToTop = (newReview: any) => {
-    setReviews((prev) => [newReview, ...prev]);
+  useEffect(() => {
+    if (numericCarId) {
+      fetchReviews(reviewPage);
+    }
+  }, [reviewPage, numericCarId]);
+
+  // Example: re-fetch page=1 after adding a new review
+  const refetchFirstPage = () => {
     setReviewPage(1);
+    fetchReviews(1);
   };
 
   // ---------------------------
-  // 4) Add Review (5-Star) Logic
+  // 3) Add a New Review (POST /api/reviews)
   // ---------------------------
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [starRating, setStarRating] = useState(0); // 1..5
@@ -135,42 +156,34 @@ function Review() {
   };
 
   const handleAddReview = async () => {
-    // Example body for POST /api/reviews
-    const bodyData = {
-      car_id: car.id,
-      grade: starRating, // from star rating
-      content: newContent,
-    };
-
     try {
-      // If your server expects an Authorization token, retrieve it from local storage or context:
-      // const token = localStorage.getItem("accessToken"); // Example
-      const token = "<PUT_YOUR_JWT_TOKEN_IF_YOU_HAVE_IT>";
+      const token = localStorage.getItem("jwt");
+      if (!token) throw new Error("No token found. Please log in.");
+
+      const bodyData = {
+        car_id: numericCarId,
+        grade: starRating,
+        content: newContent,
+      };
 
       const response = await fetch("/api/reviews", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // If your server expects "Authorization: Token <JWT>"
-          // or "Authorization: Bearer <JWT>", do something like:
-          // "Authorization": `Token ${token}`,
+          "Authorization": `${token}`,
         },
         body: JSON.stringify(bodyData),
       });
+
       if (!response.ok) {
         throw new Error("Failed to create a new review.");
       }
-      const createdReview = await response.json();
+      // The server returns { "message": "Review created successfully", "id": number }
+      await response.json();
 
-      // For demo, let's ensure we have userLiked fields
-      const newReview = {
-        ...createdReview,
-        userLiked: false,
-        userDisliked: false,
-        created_at: new Date().toISOString(),
-      };
+      // Re-fetch page=1 so we see the new review
+      refetchFirstPage();
 
-      addReviewToTop(newReview);
       // Reset form
       setStarRating(0);
       setNewContent("");
@@ -182,53 +195,99 @@ function Review() {
   };
 
   // ---------------------------
-  // 5) Like/Dislike
-  // "Only one like" means the server enforces it; we track userLiked here for UI.
+  // 4) Like/Dislike - Only front-end enforces "one click"
+  //    after user clicks like => disable that like button
+  //    after user clicks dislike => disable that dislike button
+  //    do not affect the other button
   // ---------------------------
+  // We'll track "has user clicked like" or "has user clicked dislike" in local maps
+  const [likeClickedMap, setLikeClickedMap] = useState<{ [reviewId: number]: boolean }>({});
+  const [dislikeClickedMap, setDislikeClickedMap] = useState<{ [reviewId: number]: boolean }>({});
+
   const handleLikeDislike = async (reviewId: number, action: "like" | "dislike") => {
     try {
-      // const token = localStorage.getItem("accessToken"); // Example
-      const token = "<PUT_YOUR_JWT_TOKEN_IF_YOU_HAVE_IT>";
+      const token = localStorage.getItem("jwt");
+      if (!token) throw new Error("No token found. Please log in.");
 
-      // PUT /api/reviews/:id with { action: "like" } or { action: "dislike" }
-      const response = await fetch(`/api/reviews/${reviewId}`, {
+      // We'll do a PUT /api/reviews/:id with {action: 'like' or 'dislike'}
+      const res = await fetch(`/api/reviews/${reviewId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          // "Authorization": `Token ${token}`, // or Bearer
+          "Authorization": `${token}`,
         },
         body: JSON.stringify({ action }),
       });
-      if (!response.ok) {
+      if (!res.ok) {
         throw new Error(`Failed to ${action} the review.`);
       }
-      const updatedReview = await response.json();
-g
-      setReviews((prev) =>
-        prev.map((r) => {
-          if (r.id !== reviewId) return r;
-          return {
-            ...r,
-            num_likes: updatedReview.num_likes,
-            num_dislikes: updatedReview.num_dislikes,
-            userLiked: updatedReview.userLiked,
-            userDisliked: updatedReview.userDisliked,
-          };
-        })
-      );
+      // The server returns the updated review
+      const updatedReview = await res.json();
+
+      // Merge new counts (num_likes, dislikes) into local reviews
+      setReviews(prev => prev.map(r => {
+        if (r.id !== reviewId) return r;
+        return {
+          ...r,
+          num_likes: updatedReview.num_likes,
+          dislikes: updatedReview.dislikes,
+        };
+      }));
+
+      // Now we disable the button that was clicked. 
+      // If user clicked "like", only the like button becomes disabled (and color changes). 
+      // The other is unaffected.
+      if (action === "like") {
+        setLikeClickedMap(prev => ({ ...prev, [reviewId]: true }));
+      } else {
+        setDislikeClickedMap(prev => ({ ...prev, [reviewId]: true }));
+      }
     } catch (error) {
       console.error(error);
       alert(`Error trying to ${action} review #${reviewId}.`);
     }
   };
 
-  // Same sidebar items from Profile.tsx
+  // ---------------------------
+  // 5) Pagination
+  // ---------------------------
+  const handleNextReviewPage = () => {
+    if (hasNextPage) {
+      setReviewPage(prev => prev + 1);
+    }
+  };
+
+  const handlePrevReviewPage = () => {
+    if (reviewPage > 1) {
+      setReviewPage(prev => prev - 1);
+    }
+  };
+
+  // ---------------
+  // Sidebar items
+  // ---------------
   const items = [
     { title: "Home", url: "/", icon: Home },
     { title: "Create A Comparison", url: "/create-comparison", icon: Car },
     { title: "View Comparisons", url: "/comparisons", icon: FileText },
     { title: "Reviews", url: "/reviews", icon: MessageCircle },
   ];
+
+  // Car loading states
+  if (loadingCar) {
+    return (
+      <div className="bg-gradient-to-r from-cyan-500 to-blue-500 min-h-screen flex items-center justify-center">
+        <p className="text-white">Loading car details...</p>
+      </div>
+    );
+  }
+  if (!car) {
+    return (
+      <div className="bg-gradient-to-r from-cyan-500 to-blue-500 min-h-screen flex items-center justify-center">
+        <p className="text-white">Car not found or error fetching details.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-r from-cyan-500 to-blue-500 min-h-screen">
@@ -267,45 +326,50 @@ g
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <img
-                  src={car.car_image_path}
-                  alt={`${car.make} ${car.model}`}
-                  className="object-cover rounded-lg w-full h-64 mb-4"
-                />
+                {car.car_image_path && (
+                  <img
+                    src={car.car_image_path}
+                    alt={`${car.make} ${car.model}`}
+                    className="object-cover rounded-lg w-full h-64 mb-4"
+                  />
+                )}
                 <div className="grid grid-cols-2 gap-4 text-gray-700">
                   <div>
                     <p>
-                      <strong>Generation:</strong> {car.generation}
+                      <strong>Generation:</strong> {car.generation ?? "-"}
                     </p>
                     <p>
-                      <strong>Engine (cc):</strong> {car.engine_size_cc}
+                      <strong>Engine (cc):</strong>{" "}
+                      {car.engine_size_cc ?? "-"}
                     </p>
                     <p>
-                      <strong>Fuel Type:</strong> {car.fuel_type}
+                      <strong>Fuel Type:</strong> {car.fuel_type ?? "-"}
                     </p>
                     <p>
-                      <strong>Transmission:</strong> {car.transmission}
+                      <strong>Transmission:</strong> {car.transmission ?? "-"}
                     </p>
                     <p>
-                      <strong>Drivetrain:</strong> {car.drivetrain}
+                      <strong>Drivetrain:</strong> {car.drivetrain ?? "-"}
                     </p>
                   </div>
                   <div>
                     <p>
-                      <strong>Doors:</strong> {car.num_doors}
+                      <strong>Doors:</strong> {car.num_doors ?? "-"}
                     </p>
                     <p>
                       <strong>MPG (City/Highway):</strong>{" "}
-                      {car.mpg_city} / {car.mpg_highway}
+                      {car.mpg_city ?? "-"} / {car.mpg_highway ?? "-"}
                     </p>
                     <p>
-                      <strong>Horsepower (HP):</strong> {car.horsepower_hp}
+                      <strong>Horsepower (HP):</strong>{" "}
+                      {car.horsepower_hp ?? "-"}
                     </p>
                     <p>
-                      <strong>Torque (ft-lb):</strong> {car.torque_ftlb}
+                      <strong>Torque (ft-lb):</strong>{" "}
+                      {car.torque_ftlb ?? "-"}
                     </p>
                     <p>
-                      <strong>0-60 Accel (s):</strong> {car.acceleration}
+                      <strong>0-60 Accel (s):</strong> {car.acceleration ?? "-"}
                     </p>
                   </div>
                 </div>
@@ -374,87 +438,105 @@ g
               </Card>
             )}
 
-            {/* REVIEWS WITH PAGINATION */}
+            {/* REVIEWS */}
             <div className="max-w-4xl w-full">
               <h2 className="text-2xl text-white font-bold mb-4">
                 Reviews for {car.make} {car.model}
               </h2>
 
-              {currentReviews.length === 0 ? (
+              {loadingReviews ? (
+                <p className="text-white">Loading reviews...</p>
+              ) : reviews.length === 0 ? (
                 <p className="text-white">No reviews found.</p>
               ) : (
-                currentReviews.map((review) => (
-                  <Card key={review.id} className="mb-4 bg-white shadow-lg">
-                    <CardHeader>
-                      <CardTitle className="text-lg">
-                        Rating: {review.grade} / 5
-                      </CardTitle>
-                    </CardHeader>
+                reviews.map((review) => {
+                  // We track whether user has clicked like or dislike 
+                  // for each review in local maps:
+                  const likeClicked = !!(likeClickedMap[review.id]);
+                  const dislikeClicked = !!(dislikeClickedMap[review.id]);
 
-                    <CardContent>
-                      <p>{review.content}</p>
-                    </CardContent>
+                  // The like button is disabled once user clicks it
+                  // The color changes to red if user clicked like
+                  // The dislike button is unaffected, etc.
+                  // We'll do the "like" button color red, 
+                  // and "dislike" button color blue, per your request.
+                  const likeButtonColor = likeClicked ? "red" : "gray";
+                  const likeButtonFill = likeClicked ? "red" : "none";
 
-                    {/* DATE + THUMBS in CardFooter */}
-                    <CardFooter className="flex justify-between items-center">
-                      {/* Bottom-left: Created at */}
-                      <span className="text-sm text-gray-500">
-                        Created at: {new Date(review.created_at).toLocaleString()}
-                      </span>
+                  const dislikeButtonColor = dislikeClicked ? "blue" : "gray";
+                  const dislikeButtonFill = dislikeClicked ? "blue" : "none";
 
-                      {/* Bottom-right: Like/Dislike */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleLikeDislike(review.id, "like")}
-                          className="flex items-center gap-1"
-                        >
-                          <ThumbsUp
-                            color={review.userLiked ? "red" : "gray"}
-                            fill={review.userLiked ? "red" : "none"}
-                            className="w-5 h-5"
-                          />
-                          <span>{review.num_likes}</span>
-                        </button>
+                  return (
+                    <Card key={review.id} className="mb-4 bg-white shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          Rating: {review.grade} / 5
+                        </CardTitle>
+                      </CardHeader>
 
-                        <button
-                          onClick={() => handleLikeDislike(review.id, "dislike")}
-                          className="flex items-center gap-1"
-                        >
-                          <ThumbsDown
-                            color={review.userDisliked ? "red" : "gray"}
-                            fill={review.userDisliked ? "red" : "none"}
-                            className="w-5 h-5"
-                          />
-                          <span>{review.num_dislikes}</span>
-                        </button>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                ))
+                      <CardContent>
+                        <p>{review.content}</p>
+                      </CardContent>
+
+                      {/* DATE + THUMBS in CardFooter */}
+                      <CardFooter className="flex justify-between items-center">
+                        {/* Bottom-left: Created at */}
+                        <span className="text-sm text-gray-500">
+                          Created at:{" "}
+                          {new Date(review.created_at).toLocaleString()}
+                        </span>
+
+                        {/* Bottom-right: Like/Dislike */}
+                        <div className="flex items-center gap-2">
+                          {/* LIKE button */}
+                          <button
+                            onClick={() => handleLikeDislike(review.id, "like")}
+                            disabled={likeClicked} // once clicked, we disable
+                            className="flex items-center gap-1"
+                          >
+                            <ThumbsUp
+                              color={likeButtonColor}
+                              fill={likeButtonFill}
+                              className="w-5 h-5"
+                            />
+                            <span>{review.num_likes}</span>
+                          </button>
+
+                          {/* DISLIKE button */}
+                          <button
+                            onClick={() =>
+                              handleLikeDislike(review.id, "dislike")
+                            }
+                            disabled={dislikeClicked}
+                            className="flex items-center gap-1"
+                          >
+                            <ThumbsDown
+                              color={dislikeButtonColor}
+                              fill={dislikeButtonFill}
+                              className="w-5 h-5"
+                            />
+                            <span>{review.dislikes}</span>
+                          </button>
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  );
+                })
               )}
 
-              {/* PAGINATION CONTROLS FOR REVIEWS */}
-              {totalReviewPages > 1 && (
-                <div className="flex justify-center items-center mt-4">
-                  <Button
-                    onClick={handlePrevReviewPage}
-                    disabled={reviewPage === 1}
-                    className="mr-2"
-                  >
-                    Prev
-                  </Button>
-                  <span className="text-white">
-                    Page {reviewPage} of {totalReviewPages}
-                  </span>
-                  <Button
-                    onClick={handleNextReviewPage}
-                    disabled={reviewPage === totalReviewPages}
-                    className="ml-2"
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
+              {/* PAGINATION CONTROLS */}
+              <div className="flex justify-center items-center mt-4 gap-4">
+                <Button
+                  onClick={handlePrevReviewPage}
+                  disabled={reviewPage === 1}
+                >
+                  Prev
+                </Button>
+                <span className="text-white">Page {reviewPage}</span>
+                <Button onClick={handleNextReviewPage} disabled={!hasNextPage}>
+                  Next
+                </Button>
+              </div>
             </div>
           </div>
         </main>

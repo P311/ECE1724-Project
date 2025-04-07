@@ -180,6 +180,11 @@ function Choose() {
     navigate("/compare");
   };
 
+  // A helper to navigate to review page with the car ID
+  const handleSeeReviews = (carId: number) => {
+    navigate(`/review/${carId}`);
+  };
+
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-cyan-500 to-blue-500 p-4">
       {/* PAGE TITLE & DESCRIPTION */}
@@ -406,6 +411,14 @@ function Choose() {
               className="bg-cyan-300 text-sky-800 font-bold hover:bg-cyan-500 w-full"
             >
               Add to comparison
+            </Button>
+            
+            {/* SEE REVIEWS BUTTON */}
+            <Button
+              onClick={() => handleSeeReviews(selectedCar.id)}
+              className="bg-blue-500 hover:bg-blue-600 text-white mt-4 w-full"
+            >
+              See Reviews
             </Button>
           </div>
         </div>
