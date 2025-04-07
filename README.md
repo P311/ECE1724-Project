@@ -112,6 +112,21 @@ The page only shows user name, email and number of likes.
 ![](./screenshots/comparisonList.png)
 ![](./screenshots/comparisonListClick.png)
 
+### See a review
+In the Create a Comparison Page, user can see the detail of the car and enter the review page for the car.
+
+![](./screenshots/choose_detail.png)
+
+After clicking the button, the user can see the reviews of the car
+
+![](./screenshots/review_home.png)
+
+If the user want to create a review, the user can click on the Add a new review to add review to this car
+
+![](./screenshots/add_review.jpeg)
+
+The user can like or dislike all of the posts.
+
 ## Development Guide
 
 Makefile is included in both back-end and front-end.
@@ -153,6 +168,10 @@ Note: For the first time of deployment, run `make import` to load car data into 
 - Front-end context for Comparisons Cart to be used by multiple pages
 - Front-end comparisons page (table), comparisons list page
 - Proofreading and adding additional details to the final report's User Guide section
+
+### Jiawei Chen
+- Front-end Review page
+- Front-end Create A Comparison page
 
 ## Lessons Learned and Concluding Remarks
 
