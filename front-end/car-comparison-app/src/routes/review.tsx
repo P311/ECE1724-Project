@@ -269,8 +269,7 @@ function Review() {
   const items = [
     { title: "Home", url: "/", icon: Home },
     { title: "Create A Comparison", url: "/create-comparison", icon: Car },
-    { title: "View Comparisons", url: "/comparisons", icon: FileText },
-    { title: "Reviews", url: "/reviews", icon: MessageCircle },
+    { title: "View Comparisons", url: "/comparisonsList", icon: FileText },
   ];
 
   // Car loading states
