@@ -97,7 +97,7 @@ The page only shows user name, email and number of likes.
 
 - User can choose at most 4 cars to compare. Use filter to filter out cars in the list. Click the car card will should details of a car.
 
-![](./screenshots/car_detail.png)
+![](./screenshots/choose_detail.png)
 
 - Click 'Selected Cars' button on the top can show the list of selected cars, and user can create the comparison from the modal.
 
