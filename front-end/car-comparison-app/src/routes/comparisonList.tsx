@@ -44,11 +44,6 @@ function ComparisonsList() {
       url: "/comparisonsList",
       icon: FileText,
     },
-    {
-      title: "Reviews",
-      url: "/reviews",
-      icon: MessageCircle,
-    },
   ];
 
   const carAttributes: (keyof Car)[] = [
